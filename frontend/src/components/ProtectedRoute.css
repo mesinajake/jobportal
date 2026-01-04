@@ -1,0 +1,8 @@
+/* ProtectedRoute.css - ProtectedRoute component styles */
+
+/* Protected route doesn't have specific styles, but might need shared ones */
+section {
+    padding: 2rem;
+    margin: 0 auto;
+    max-width: 1200px;
+}

@@ -1,0 +1,75 @@
+/* Footer.css - Footer component styles */
+
+.footer .grid {    
+    display: grid;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    grid-template-columns: repeat(auto-fit, 20rem);
+    padding: 3rem;
+    bottom: 0;
+    position: relative;
+}
+
+.footer .grid .box h3{
+    font-size: 2rem;
+    margin: 1rem 0;
+    color: var(--black);
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.box p {
+    font-size: 1.5rem;
+}
+
+.box a {
+    text-decoration: none;
+    color: var(--black);
+    line-height: 2;
+    font-size: 1.5rem;
+}
+
+.box a:hover {
+    text-decoration: underline;
+}
+
+.footer .credit{
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: var(--border);
+    background-color: var(--white);
+    font-size: 2rem;
+    color: var(--main-color);
+    line-height: 1.5;
+}
+
+/* Social media styles */
+.social-media {
+    display: flex;
+    margin-top: 1rem;
+}
+
+.social-media a {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--light-bg);
+    color: var(--black);
+    text-align: center;
+    line-height: 3rem;
+    font-size: 1.5rem;
+}
+
+.social-media a:hover {
+    background-color: var(--main-color);
+    color: var(--white);
+    text-decoration: none;
+}

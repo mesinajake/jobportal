@@ -1,0 +1,158 @@
+/* Home.css - Home page styles */
+
+.home-container {
+    background: url(/images/vector-profession-pattern-profession-seamless-background-vector-illustration-vector-profession-pattern-profession-seamless-114473926.jpg) rgba(0,0,0,.7) no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-blend-mode: color;
+}
+
+.home-container .home {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-container .home form{
+    background-color: var(--white);
+    width: 50rem;
+    border-radius: .5rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.home-container .home form h3{
+    font-size: 2.5rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+    text-transform: capitalize;
+}
+
+.home-container .home form p{
+    text-align: left;
+    font-size: 1.6rem;
+    color: var(--light-color);
+    padding-top: 1rem;
+}
+
+.home-container .home form p span {
+    color: var(--red);
+}
+
+.home-container .home form .input {
+    width: 100%;
+    border-radius: .5rem;
+    margin: 1rem 0;
+    background-color: var(--light-bg);
+    padding: 1.4rem;
+    font-size: 1.8rem;
+    color: var(--black);
+}
+
+.home-container .home form .result-box{
+    max-height: 100px;
+    overflow-y: scroll;
+}
+
+.home-container .home form .result-box ul{
+    width: 100%;
+    border-top: 1.5rem;
+    padding: 15px 10px;
+}
+
+.home-container .home form .result-box ul li{
+    list-style: none;
+    border-radius: .5rem;
+    padding: 1.4rem;
+    font-size: 1.5rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.home-container .home form .result-box ul li:hover{
+    background: rgba(59, 172, 182, 0.1);
+}
+
+/* Category section styles */
+.category .box-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 25rem);
+    justify-content: center;    
+    align-items: flex-start;
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.category .box-container .box {
+    border-radius: .5rem;
+    box-shadow: var(--box-shadow);
+    border: var(--border);
+    padding: 1.5rem;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.category .box-container .box img{
+    width: 70px;
+    color: var(--black);
+    border-radius: .5rem;
+}
+
+.category .box-container .box h3 {
+    font-size: 1.5rem;
+    color: var(--black);
+    padding-bottom: .4rem;
+}
+
+.category .box-container .box span {
+    color: var(--light-color);
+    font-size: 1.3rem;
+}
+
+.category .box-container .box:hover {
+    background-color: var(--black);
+}
+
+.category .box-container .box:hover h3 {
+    color: var(--white);
+}
+
+.category .box-container .box:hover span{
+    color: var(--white);
+}
+
+/* Shared styles */
+.heading {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 3rem;
+    color: var(--black);
+    padding: 1rem 0;
+}
+
+
+section {
+    padding: 2rem;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: white;
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--main-color);
+}

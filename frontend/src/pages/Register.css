@@ -1,0 +1,111 @@
+/* Register.css - Register page styles */
+
+/* Account form container styles */
+.account-form-container{
+    background: url(/images/login-icon.jpg) rgba(0,0,0,.7) no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-blend-mode: color;
+}
+
+.account-form-container .account-form{
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.account-form-container .account-form form{
+    background-color: var(--white);
+    width: 50rem;
+    border-radius: .5rem;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.account-form-container .account-form form h3{
+    font-size: 2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.account-form-container .account-form form .input{
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 1.5rem;
+    padding: 1.6rem;
+    background-color: var(--light-bg);
+    border-radius: .5rem;
+}
+
+.account-form-container .account-form form p{
+    padding: 1rem 0;
+    font-size: 1.5rem;
+    color: var(--light-color);
+}
+
+.account-form-container .account-form form p a{
+    color: var(--main-color);
+}
+
+/* Role Selection Styles */
+.role-selection {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.role-option {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: white;
+}
+
+.role-option:hover {
+  border-color: #3498db;
+  background: #f8f9fa;
+}
+
+.role-option input[type="radio"] {
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.role-option input[type="radio"]:checked ~ span {
+  font-weight: 600;
+  color: #3498db;
+}
+
+.role-option span {
+  flex: 1;
+  font-size: 1.4rem;
+}
+
+.account-form-container .account-form form p a:hover{
+    color: var(--black);
+    text-decoration: underline;
+}
+
+/* Shared styles */
+.btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: white;
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--main-color);
+}
