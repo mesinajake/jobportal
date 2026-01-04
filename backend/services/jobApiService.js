@@ -29,7 +29,12 @@ const daysAgo = (dateStr) => {
 // Fetch jobs from FindWork.dev API
 export const fetchFindWorkJobs = async ({ search = '', location = '', page = 1 }) => {
   try {
-    const apiKey = process.env.FINDWORK_API_KEY || '4ab40bbd543eb2acfb3bc096e02aefe5be159c47';
+    const apiKey = process.env.FINDWORK_API_KEY;
+    
+    if (!apiKey) {
+      console.error('FINDWORK_API_KEY is not set in environment variables');
+      return [];
+    }
     
     const params = {
       page: page || 1
