@@ -154,8 +154,8 @@ User {
 
 ### Backend `.env`:
 ```properties
-MONGODB_URI=mongodb+srv://mesinajake9_db_user:YRgr89WPL5J3vY2A@userconfig.7wwyeam.mongodb.net/jobportal?retryWrites=true&w=majority&appName=UserConfig
-JWT_SECRET=jobportal_secret_key_2025_change_me
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/jobportal?retryWrites=true&w=majority
+JWT_SECRET=your_strong_random_secret_key_here
 JWT_EXPIRE=7d
 PORT=5000
 NODE_ENV=development

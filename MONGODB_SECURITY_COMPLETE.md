@@ -66,11 +66,11 @@ git ls-files | grep env
 **⚠️ IMPORTANT: These are in your .env file (NOT in GitHub):**
 
 ```
-MONGODB_URI=mongodb+srv://mesinajake9_db_user:YRgr89WPL5J3vY2A@userconfig.7wwyeam.mongodb.net/jobportal
-JWT_SECRET=jobportal_secret_key_2025_change_me
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/jobportal
+JWT_SECRET=your_strong_random_secret_key_here
 ```
 
-**Recommendation**: Change these passwords after setting up, since they were visible in your chat history.
+**Recommendation**: Use strong, unique passwords and never commit these to version control.
 
 ---
 
@@ -85,7 +85,7 @@ JWT_SECRET=jobportal_secret_key_2025_change_me
 ### Step 2: Update Local .env
 ```bash
 # Edit backend/.env
-MONGODB_URI=mongodb+srv://mesinajake9_db_user:NEW_PASSWORD_HERE@userconfig.7wwyeam.mongodb.net/jobportal
+MONGODB_URI=mongodb+srv://<username>:<new_password>@<cluster>.mongodb.net/jobportal
 ```
 
 ### Step 3: Restart Server
