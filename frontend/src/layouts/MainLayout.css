@@ -1,0 +1,11 @@
+/* MainLayout.css - Main layout styles */
+
+.main-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-layout .main-content {
+    flex: 1;
+}

@@ -1,0 +1,241 @@
+/* JobDetails.css - Job details page styles */
+
+.job-details-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.job-details-card {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* Job Header */
+.job-header {
+    border-bottom: 1px solid var(--light-bg);
+}
+
+.company-info {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.company-logo {
+    width: 8rem;
+    height: 8rem;
+    object-fit: contain;
+    border-radius: 1rem;
+    border: 1px solid var(--light-bg);
+}
+
+.company-info h1 {
+    font-size: 2.4rem;
+    color: var(--black);
+    margin-bottom: 0.5rem;
+}
+
+.company-name,
+.company-link {
+    font-size: 1.6rem;
+    color: #38a169;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.company-link:hover {
+    text-decoration: underline;
+}
+
+.location {
+    font-size: 1.5rem;
+    color: var(--light-color);
+}
+
+.location i {
+    color: #38a169;
+    margin-right: 0.5rem;
+}
+
+.job-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--light-bg);
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1.4rem;
+    color: var(--black);
+}
+
+.tag i {
+    color: #38a169;
+}
+
+/* Job Sections */
+.job-section {
+    padding: 2.5rem 3rem;
+    border-bottom: 1px solid var(--light-bg);
+}
+
+.job-section:last-of-type {
+    border-bottom: none;
+}
+
+.job-section h2 {
+    font-size: 1.8rem;
+    color: var(--black);
+    margin-bottom: 1.5rem;
+}
+
+.job-section ul {
+    list-style: none;
+}
+
+.job-section ul li {
+    padding: 1rem 0;
+    font-size: 1.5rem;
+    color: var(--light-color);
+    border-bottom: 1px dashed var(--light-bg);
+}
+
+.job-section ul li:last-child {
+    border-bottom: none;
+}
+
+.job-section p {
+    font-size: 1.5rem;
+    color: var(--light-color);
+    line-height: 1.8;
+}
+
+.posted-info {
+    margin-top: 1.5rem;
+    font-style: italic;
+    color: var(--light-color);
+}
+
+/* Success Message */
+.success-message {
+    margin: 0 3rem;
+    padding: 1.2rem 2rem;
+    background: #d1fae5;
+    color: #059669;
+    border-radius: 0.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Job Actions */
+.job-actions {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    flex: 1;
+    justify-content: center;
+    color: var(--white);
+    background: linear-gradient(135deg, #38a169, #276749);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+}
+
+.btn-secondary {
+    color: var(--black);
+    background: var(--light-bg);
+}
+
+.btn-secondary:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* Back Link */
+.back-link {
+    margin-top: 2rem;
+}
+
+.back-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.5rem;
+    color: var(--light-color);
+}
+
+.back-link a:hover {
+    color: #38a169;
+}
+
+/* Not Found State */
+.job-details.not-found {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.job-details.not-found i {
+    font-size: 5rem;
+    color: var(--light-color);
+    margin-bottom: 1.5rem;
+}
+
+.job-details.not-found h1 {
+    font-size: 2.5rem;
+    color: var(--black);
+    margin-bottom: 0.5rem;
+}
+
+.job-details.not-found p {
+    font-size: 1.5rem;
+    color: var(--light-color);
+    margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .company-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .company-logo {
+        margin: 0 auto;
+    }
+    
+    .job-meta {
+        justify-content: center;
+    }
+    
+    .job-actions {
+        flex-direction: column;
+    }
+}

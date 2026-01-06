@@ -15,10 +15,6 @@ export function AuthProvider({ children }) {
         const token = localStorage.getItem('token')
         const storedUser = localStorage.getItem('user')
         
-        console.log('AuthContext: Checking auth on mount...'); // Debug log
-        console.log('AuthContext: Token found:', !!token); // Debug log
-        console.log('AuthContext: Stored user found:', !!storedUser); // Debug log
-        
         if (token) {
           apiClient.setToken(token)
           
@@ -29,7 +25,6 @@ export function AuthProvider({ children }) {
               setUser(response.data)
               setLoggedIn(true)
               localStorage.setItem('user', JSON.stringify(response.data))
-              console.log('AuthContext: User authenticated from server:', response.data); // Debug log
             }
           } catch (error) {
             // If server request fails but we have stored user data, use it
@@ -38,7 +33,6 @@ export function AuthProvider({ children }) {
                 const userData = JSON.parse(storedUser)
                 setUser(userData)
                 setLoggedIn(true)
-                console.log('AuthContext: Using stored user data:', userData); // Debug log
               } catch (parseError) {
                 console.error('AuthContext: Failed to parse stored user:', parseError)
                 localStorage.removeItem('token')
@@ -63,9 +57,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      console.log('AuthContext: Calling login API...'); // Debug log
       const response = await authAPI.login({ email, password })
-      console.log('AuthContext: Login response:', response); // Debug log
       if (response.success) {
         const { user, token } = response.data
         // Save token to localStorage FIRST
@@ -74,73 +66,131 @@ export function AuthProvider({ children }) {
         apiClient.setToken(token)
         
         // Fetch fresh user data from server to get ALL profile fields
+        let finalUser = user;
         try {
-          console.log('AuthContext: Fetching fresh user data after login...')
           const freshUserResponse = await authAPI.getMe()
           if (freshUserResponse.success) {
-            console.log('AuthContext: Fresh user data received:', freshUserResponse.data)
+            finalUser = freshUserResponse.data
             setUser(freshUserResponse.data)
             localStorage.setItem('user', JSON.stringify(freshUserResponse.data))
             setLoggedIn(true)
-            console.log('AuthContext: Login successful with fresh data')
-            return true
           }
         } catch (fetchError) {
           // If fetching fresh data fails, use login data
-          console.warn('AuthContext: Failed to fetch fresh user data, using login data')
           setUser(user)
           localStorage.setItem('user', JSON.stringify(user))
           setLoggedIn(true)
         }
         
-        console.log('AuthContext: Token saved:', token); // Debug log
-        return true
+        return { success: true, user: finalUser }
       }
-      console.warn('AuthContext: Login failed - response not successful'); // Debug log
-      return false
+      return { success: false, message: 'Login failed' }
     } catch (error) {
-      console.error('AuthContext: Login failed with error:', error); // Debug log
-      throw error // Re-throw to show error message
+      return { success: false, message: error.message || 'Login failed' }
     }
   }
 
-  const register = async (name, email, password, role = 'jobseeker', companyName = '') => {
+  const register = async (name, email, password) => {
     try {
-      console.log('AuthContext: Calling register API with role:', role); // Debug log
+      // Public registration always creates candidates
       const response = await authAPI.register({ 
         name, 
         email, 
-        password, 
-        role,
-        companyName 
+        password
       })
-      console.log('AuthContext: Register response:', response); // Debug log
       if (response.success) {
-        const { user, token, company } = response.data
+        const { user, token } = response.data
         // Save token to localStorage FIRST
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
-        if (company) {
-          localStorage.setItem('company', JSON.stringify(company))
-        }
         // Then set token in API client
         apiClient.setToken(token)
         // Update state
         setUser(user)
         setLoggedIn(true)
-        console.log('AuthContext: Registration successful, user set:', user); // Debug log
-        console.log('AuthContext: Token saved:', token); // Debug log
-        if (company) {
-          console.log('AuthContext: Company created:', company); // Debug log
-        }
-        return true
+        return { success: true, user }
       }
-      console.warn('AuthContext: Registration failed - response not successful'); // Debug log
-      return false
+      return { success: false, message: response.message || 'Registration failed' }
     } catch (error) {
-      console.error('AuthContext: Registration failed with error:', error); // Debug log
-      throw error // Re-throw to show error message
+      return { success: false, message: error.message || 'Registration failed' }
     }
+  }
+
+  // Google OAuth login
+  const loginWithGoogle = async (googleData) => {
+    try {
+      const response = await authAPI.googleAuth(googleData)
+      if (response.success) {
+        const { user, token } = response.data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        apiClient.setToken(token)
+        setUser(user)
+        setLoggedIn(true)
+        return { success: true, user }
+      }
+      return { success: false, message: response.message || 'Google login failed' }
+    } catch (error) {
+      return { success: false, message: error.message || 'Google login failed' }
+    }
+  }
+
+  // Phone OTP - Request
+  const requestPhoneOTP = async (phoneNumber) => {
+    try {
+      const response = await authAPI.requestPhoneOTP(phoneNumber)
+      return response
+    } catch (error) {
+      return { success: false, message: error.message || 'Failed to send OTP' }
+    }
+  }
+
+  // Phone OTP - Verify
+  const verifyPhoneOTP = async (phoneNumber, otp, name) => {
+    try {
+      const response = await authAPI.verifyPhoneOTP({ phoneNumber, otp, name })
+      if (response.success) {
+        const { user, token } = response.data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        apiClient.setToken(token)
+        setUser(user)
+        setLoggedIn(true)
+        return { success: true, user, needsProfileUpdate: response.data.needsProfileUpdate }
+      }
+      return { success: false, message: response.message || 'OTP verification failed' }
+    } catch (error) {
+      return { success: false, message: error.message || 'OTP verification failed' }
+    }
+  }
+
+  // Admin login (email/password only)
+  const adminLogin = async (email, password) => {
+    try {
+      const response = await authAPI.adminLogin({ email, password })
+      if (response.success) {
+        const { user, token } = response.data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        apiClient.setToken(token)
+        setUser(user)
+        setLoggedIn(true)
+        return { success: true, user }
+      }
+      return { success: false, message: response.message || 'Admin login failed' }
+    } catch (error) {
+      return { success: false, message: error.message || 'Admin login failed' }
+    }
+  }
+
+  // Helper to check if user is staff (non-candidate)
+  const isStaff = () => {
+    return user && ['recruiter', 'hiring_manager', 'hr', 'admin'].includes(user.role)
+  }
+
+  // Helper to check specific role
+  const hasRole = (...roles) => {
+    return user && roles.includes(user.role)
   }
 
   const logout = async () => {
@@ -159,27 +209,36 @@ export function AuthProvider({ children }) {
 
   const updateUser = async (updates) => {
     try {
-      console.log('🔄 AuthContext: updateUser called with:', updates)
       const response = await usersAPI.updateProfile(updates)
-      console.log('📥 AuthContext: Backend response:', response)
       
       if (response.success) {
-        console.log('✅ AuthContext: Updating user state with:', response.data)
         setUser(response.data)
         localStorage.setItem('user', JSON.stringify(response.data))
-        console.log('💾 AuthContext: User saved to localStorage')
         return true
       }
-      console.warn('⚠️ AuthContext: Update failed - response not successful')
       return false
     } catch (error) {
-      console.error('❌ AuthContext: Update profile failed:', error)
       return false
     }
   }
 
   const value = useMemo(
-    () => ({ user, loggedIn, loading, login, register, logout, updateUser }),
+    () => ({ 
+      user, 
+      loggedIn, 
+      loading, 
+      login, 
+      register, 
+      logout, 
+      updateUser, 
+      isStaff, 
+      hasRole,
+      // Social auth methods
+      loginWithGoogle,
+      requestPhoneOTP,
+      verifyPhoneOTP,
+      adminLogin
+    }),
     [user, loggedIn, loading]
   )
 

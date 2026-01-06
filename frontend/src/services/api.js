@@ -47,20 +47,15 @@ class ApiClient {
     };
 
     try {
-      console.log('API Request:', url, config); // Debug log
       const response = await fetch(url, config);
       const data = await response.json();
 
-      console.log('API Response:', response.status, data); // Debug log
-
       if (!response.ok) {
-        console.error('API Error Response:', data); // Debug log
         throw new Error(data.message || 'Something went wrong');
       }
 
       return data;
     } catch (error) {
-      console.error('API Error:', error.message, error); // Enhanced error log
       throw error;
     }
   }
@@ -103,10 +98,21 @@ const apiClient = new ApiClient();
 
 // Auth API
 export const authAPI = {
+  // Traditional auth
   register: (data) => apiClient.post('/auth/register', data),
   login: (data) => apiClient.post('/auth/login', data),
   getMe: () => apiClient.get('/auth/me'),
   logout: () => apiClient.post('/auth/logout'),
+  
+  // Google OAuth
+  googleAuth: (data) => apiClient.post('/auth/google', data),
+  
+  // Phone OTP auth
+  requestPhoneOTP: (phoneNumber) => apiClient.post('/auth/phone/request-otp', { phoneNumber }),
+  verifyPhoneOTP: (data) => apiClient.post('/auth/phone/verify-otp', data),
+  
+  // Admin login (email/password only)
+  adminLogin: (data) => apiClient.post('/auth/admin/login', data),
 };
 
 // Jobs API
@@ -116,7 +122,43 @@ export const jobsAPI = {
   createJob: (data) => apiClient.post('/jobs', data),
   updateJob: (id, data) => apiClient.put(`/jobs/${id}`, data),
   deleteJob: (id) => apiClient.delete(`/jobs/${id}`),
-  searchExternal: (params) => apiClient.get('/jobs/search/external', params),
+  approveJob: (id) => apiClient.put(`/jobs/${id}/approve`),
+  rejectJob: (id, reason) => apiClient.put(`/jobs/${id}/reject`, { reason }),
+  getPendingJobs: () => apiClient.get('/jobs/admin/pending-approval'),
+  getJobsByDepartment: (deptId) => apiClient.get(`/jobs/by-department/${deptId}`),
+};
+
+// Departments API
+export const departmentsAPI = {
+  getDepartments: () => apiClient.get('/departments'),
+  getDepartment: (id) => apiClient.get(`/departments/${id}`),
+  createDepartment: (data) => apiClient.post('/departments', data),
+  updateDepartment: (id, data) => apiClient.put(`/departments/${id}`, data),
+  deleteDepartment: (id) => apiClient.delete(`/departments/${id}`),
+  getDepartmentJobs: (id) => apiClient.get(`/departments/${id}/jobs`),
+  getDepartmentTeam: (id) => apiClient.get(`/departments/${id}/team`),
+  getDepartmentStats: (id) => apiClient.get(`/departments/${id}/stats`),
+};
+
+// Applications API
+export const applicationsAPI = {
+  getApplications: (params) => apiClient.get('/applications', params),
+  getApplication: (id) => apiClient.get(`/applications/${id}`),
+  createApplication: (data) => apiClient.post('/applications', data),
+  updateApplicationStatus: (id, data) => apiClient.put(`/applications/${id}/status`, data),
+  withdrawApplication: (id) => apiClient.delete(`/applications/${id}`),
+};
+
+// Interviews API
+export const interviewsAPI = {
+  getInterviews: (params) => apiClient.get('/interviews', params),
+  getInterview: (id) => apiClient.get(`/interviews/${id}`),
+  scheduleInterview: (data) => apiClient.post('/interviews', data),
+  updateInterview: (id, data) => apiClient.put(`/interviews/${id}`, data),
+  cancelInterview: (id) => apiClient.delete(`/interviews/${id}`),
+  submitFeedback: (id, data) => apiClient.post(`/interviews/${id}/feedback`, data),
+  respondToInterview: (id, data) => apiClient.put(`/interviews/${id}/respond`, data),
+  getMySchedule: () => apiClient.get('/interviews/my-schedule'),
 };
 
 // Users API
@@ -133,6 +175,11 @@ export const savedJobsAPI = {
   saveJob: (data) => apiClient.post('/saved-jobs', data),
   updateSavedJob: (id, data) => apiClient.put(`/saved-jobs/${id}`, data),
   removeSavedJob: (id) => apiClient.delete(`/saved-jobs/${id}`),
+};
+
+// Company API
+export const companyAPI = {
+  getCompanyInfo: () => apiClient.get('/company'),
 };
 
 export { apiClient };

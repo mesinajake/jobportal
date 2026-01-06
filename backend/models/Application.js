@@ -12,11 +12,17 @@ const applicationSchema = new mongoose.Schema(
       ref: 'Job',
       required: true
     },
-    // NEW: Company reference for direct access
-    company: {
+    // Department reference for filtering (populated from job)
+    department: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Company'
+      ref: 'Department'
     },
+    // Referral tracking
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    referralNote: String,
     coverLetter: {
       type: String,
       trim: true
@@ -25,7 +31,6 @@ const applicationSchema = new mongoose.Schema(
       type: String, // URL or path to resume
       trim: true
     },
-    // NEW: Enhanced resume tracking
     resumeDetails: {
       filename: String,
       url: String,
@@ -33,17 +38,34 @@ const applicationSchema = new mongoose.Schema(
       parsedText: String, // Cached for AI analysis
       aiScore: Number // Match score from AI analysis
     },
+    // Extended status for hiring workflow
     status: {
       type: String,
-      enum: ['pending', 'reviewing', 'shortlisted', 'rejected', 'accepted', 'withdrawn'],
+      enum: [
+        'pending',
+        'screening',
+        'phone_screen',
+        'interviewing',
+        'final_round',
+        'offer_pending',
+        'offer_sent',
+        'offer_accepted',
+        'offer_declined',
+        'hired',
+        'rejected',
+        'withdrawn',
+        'on_hold'
+      ],
       default: 'pending'
     },
-    // NEW: Status history tracking
+    // Current stage in interview process
+    currentStage: {
+      type: Number,
+      default: 0
+    },
+    // Status history tracking
     statusHistory: [{
-      status: {
-        type: String,
-        enum: ['pending', 'reviewing', 'shortlisted', 'rejected', 'accepted', 'withdrawn']
-      },
+      status: String,
       changedAt: {
         type: Date,
         default: Date.now
@@ -54,7 +76,7 @@ const applicationSchema = new mongoose.Schema(
       },
       note: String
     }],
-    // NEW: Notes from employer
+    // Notes from recruiters/hiring managers
     notes: [{
       text: String,
       createdBy: {
@@ -64,15 +86,60 @@ const applicationSchema = new mongoose.Schema(
       createdAt: {
         type: Date,
         default: Date.now
+      },
+      isPrivate: {
+        type: Boolean,
+        default: false
       }
     }],
+    // Rating from interviewers
+    rating: {
+      score: {
+        type: Number,
+        min: 1,
+        max: 5
+      },
+      ratedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      ratedAt: Date
+    },
+    // Offer details
+    offer: {
+      salary: Number,
+      currency: {
+        type: String,
+        default: 'USD'
+      },
+      startDate: Date,
+      expiresAt: Date,
+      sentAt: Date,
+      sentBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      respondedAt: Date,
+      response: {
+        type: String,
+        enum: ['pending', 'accepted', 'declined', 'negotiating']
+      },
+      negotiationNotes: String
+    },
     appliedAt: {
       type: Date,
       default: Date.now
     },
-    // NEW: Withdrawal tracking
     withdrawnAt: Date,
     withdrawnReason: String,
+    // Rejection details
+    rejectedAt: Date,
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rejectionReason: String,
+    rejectionFeedback: String, // Optional feedback to candidate
     updatedAt: {
       type: Date,
       default: Date.now
@@ -86,12 +153,14 @@ const applicationSchema = new mongoose.Schema(
 // Create compound index to ensure a user can't apply to the same job twice
 applicationSchema.index({ user: 1, job: 1 }, { unique: true });
 
-// NEW: Indexes for common queries
-applicationSchema.index({ company: 1, status: 1, appliedAt: -1 });
+// Indexes for common queries
+applicationSchema.index({ department: 1, status: 1, appliedAt: -1 });
 applicationSchema.index({ user: 1, status: 1, appliedAt: -1 });
 applicationSchema.index({ status: 1, appliedAt: -1 });
+applicationSchema.index({ job: 1, status: 1 });
+applicationSchema.index({ referredBy: 1 });
 
-// NEW: Method to update status with history tracking
+// Method to update status with history tracking
 applicationSchema.methods.updateStatus = function(newStatus, userId, note) {
   this.status = newStatus;
   this.statusHistory.push({

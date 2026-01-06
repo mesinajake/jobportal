@@ -1,0 +1,152 @@
+/* EmployerLayout.css - Employer dashboard layout styles */
+
+.employer-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--light-bg);
+}
+
+/* Sidebar styles */
+.employer-sidebar {
+    width: 26rem;
+    background: linear-gradient(180deg, #1a365d 0%, #2c5282 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+}
+
+.employer-sidebar .sidebar-header {
+    padding: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.employer-sidebar .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.employer-sidebar .sidebar-logo i {
+    color: #63b3ed;
+    font-size: 2.5rem;
+}
+
+.employer-sidebar .sidebar-nav {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.employer-sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.6rem;
+    transition: all 0.3s ease;
+}
+
+.employer-sidebar .nav-item:hover,
+.employer-sidebar .nav-item.active {
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid #63b3ed;
+}
+
+.employer-sidebar .nav-item i {
+    width: 2rem;
+    text-align: center;
+}
+
+.employer-sidebar .sidebar-footer {
+    padding: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.employer-sidebar .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: .5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.employer-sidebar .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+/* Main content area */
+.employer-main {
+    flex: 1;
+    margin-left: 26rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.employer-header {
+    background: var(--white);
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.employer-header .header-title h2 {
+    font-size: 2rem;
+    color: var(--black);
+}
+
+.employer-header .header-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.5rem;
+    color: var(--black);
+}
+
+.employer-header .header-user i {
+    font-size: 3rem;
+    color: #2c5282;
+}
+
+.employer-content {
+    flex: 1;
+    padding: 3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .employer-sidebar {
+        width: 7rem;
+    }
+    
+    .employer-sidebar .sidebar-logo span,
+    .employer-sidebar .nav-item span,
+    .employer-sidebar .logout-btn span {
+        display: none;
+    }
+    
+    .employer-main {
+        margin-left: 7rem;
+    }
+}

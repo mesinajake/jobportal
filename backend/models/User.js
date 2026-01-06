@@ -26,11 +26,40 @@ const userSchema = new mongoose.Schema(
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password by default
     },
+    // Updated role system for single-company portal
+    // candidate: External job applicants
+    // recruiter: Can post jobs and manage applications
+    // hiring_manager: Department leads who approve candidates
+    // hr: Full HR access including offers and analytics
+    // admin: System administrator with full access
     role: {
       type: String,
-      enum: ['jobseeker', 'employer', 'admin'],
-      default: 'jobseeker'
+      enum: ['candidate', 'recruiter', 'hiring_manager', 'hr', 'admin'],
+      default: 'candidate'
     },
+    // Department for internal staff
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department'
+    },
+    // Staff-specific fields
+    employeeId: {
+      type: String,
+      sparse: true,
+      trim: true
+    },
+    jobTitle: {
+      type: String,
+      trim: true
+    },
+    // Invitation tracking for staff
+    invitedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    invitedAt: Date,
+    inviteToken: String,
+    inviteTokenExpires: Date,
     phone: {
       type: String,
       trim: true
@@ -167,6 +196,35 @@ const userSchema = new mongoose.Schema(
       default: 0
     },
     lockUntil: Date,
+    
+    // Social Authentication
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'phone'],
+      default: 'local'
+    },
+    googleId: {
+      type: String,
+      sparse: true
+    },
+    phoneNumber: {
+      type: String,
+      sparse: true,
+      trim: true
+    },
+    phoneVerified: {
+      type: Boolean,
+      default: false
+    },
+    phoneOtp: {
+      code: String,
+      expiresAt: Date,
+      attempts: {
+        type: Number,
+        default: 0
+      }
+    },
+    
     createdAt: {
       type: Date,
       default: Date.now
@@ -181,13 +239,19 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
+// Hash password before saving (only for local auth)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
+  // Skip password hashing for social auth users
+  if (this.authProvider !== 'local' || !this.isModified('password')) {
+    return next();
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  
+  // Only hash if password exists
+  if (this.password) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
 });
 
 // Method to compare passwords

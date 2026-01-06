@@ -1,25 +1,32 @@
 import express from 'express';
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
-import Company from '../models/Company.js';
 import Analytics from '../models/Analytics.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
+import { requirePermission, requireRole, isStaff } from '../middleware/roleAccess.js';
 
 const router = express.Router();
 
-// @desc    Submit job application (Job Seekers only)
+// @desc    Submit job application (Candidates only)
 // @route   POST /api/applications
-// @access  Private (jobseeker)
-router.post('/', protect, authorize('jobseeker'), async (req, res) => {
+// @access  Private (candidate)
+router.post('/', protect, requireRole('candidate'), async (req, res) => {
   try {
-    const { jobId, coverLetter, resumeUrl } = req.body;
+    const { jobId, coverLetter, resumeUrl, referralNote } = req.body;
 
-    // Check if job exists
-    const job = await Job.findById(jobId).populate('companyRef');
+    // Check if job exists and is open
+    const job = await Job.findById(jobId).populate('department');
     if (!job) {
       return res.status(404).json({
         success: false,
         message: 'Job not found'
+      });
+    }
+
+    if (job.status !== 'open') {
+      return res.status(400).json({
+        success: false,
+        message: 'This position is no longer accepting applications'
       });
     }
 
@@ -40,31 +47,25 @@ router.post('/', protect, authorize('jobseeker'), async (req, res) => {
     const application = await Application.create({
       user: req.user.id,
       job: jobId,
-      company: job.companyRef?._id || null,
+      department: job.department?._id,
       coverLetter,
-      resume: resumeUrl,
+      resume: resumeUrl || req.user.resume,
       resumeDetails: {
-        url: resumeUrl,
+        url: resumeUrl || req.user.resume,
         uploadedAt: new Date()
-      }
+      },
+      referralNote,
+      currentStage: 'applied'
     });
 
     // Update job application count
-    job.applications += 1;
+    job.applications = (job.applications || 0) + 1;
     await job.save();
-
-    // Update company stats
-    if (job.companyRef) {
-      await Company.findByIdAndUpdate(job.companyRef, {
-        $inc: { 'stats.totalApplications': 1 }
-      });
-    }
 
     // Track analytics
     Analytics.trackEvent({
       eventType: 'apply',
       job: jobId,
-      company: job.companyRef?._id || null,
       user: req.user.id
     }).catch(err => console.error('Analytics error:', err));
 
@@ -81,10 +82,10 @@ router.post('/', protect, authorize('jobseeker'), async (req, res) => {
   }
 });
 
-// @desc    Get user's applications (Job Seekers only)
+// @desc    Get user's applications (Candidates only)
 // @route   GET /api/applications/my-applications
-// @access  Private (jobseeker)
-router.get('/my-applications', protect, authorize('jobseeker'), async (req, res) => {
+// @access  Private (candidate)
+router.get('/my-applications', protect, requireRole('candidate'), async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
@@ -95,8 +96,8 @@ router.get('/my-applications', protect, authorize('jobseeker'), async (req, res)
     }
 
     const applications = await Application.find(query)
-      .populate('job', 'title company location salary type')
-      .populate('company', 'name logo')
+      .populate('job', 'title location employmentType workArrangement salaryRange')
+      .populate('department', 'name color')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -122,35 +123,29 @@ router.get('/my-applications', protect, authorize('jobseeker'), async (req, res)
   }
 });
 
-// @desc    Get applications for employer's jobs (Employers only)
+// @desc    Get applications for staff (Recruiters, Hiring Managers, HR, Admin)
 // @route   GET /api/applications/received
-// @access  Private (employer)
-router.get('/received', protect, authorize('employer'), async (req, res) => {
+// @access  Private (staff)
+router.get('/received', protect, requirePermission('view_applications'), async (req, res) => {
   try {
-    const { status, jobId, page = 1, limit = 20 } = req.query;
+    const { status, jobId, departmentId, page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
 
-    // Get employer's company
-    const company = await Company.findOne({ owner: req.user.id });
-    if (!company) {
-      return res.status(404).json({
-        success: false,
-        message: 'Company profile not found'
-      });
-    }
-
     // Build query
-    const query = { company: company._id };
-    if (status) {
-      query.status = status;
-    }
-    if (jobId) {
-      query.job = jobId;
+    const query = {};
+    if (status) query.status = status;
+    if (jobId) query.job = jobId;
+    if (departmentId) query.department = departmentId;
+
+    // If hiring manager, only show their department's applications
+    if (req.user.role === 'hiring_manager' && req.user.department) {
+      query.department = req.user.department;
     }
 
     const applications = await Application.find(query)
       .populate('user', 'name email skills bio resume')
-      .populate('job', 'title location salary type')
+      .populate('job', 'title location employmentType')
+      .populate('department', 'name color')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -159,7 +154,7 @@ router.get('/received', protect, authorize('employer'), async (req, res) => {
 
     // Get stats
     const stats = await Application.aggregate([
-      { $match: { company: company._id } },
+      { $match: query },
       {
         $group: {
           _id: '$status',
@@ -191,14 +186,16 @@ router.get('/received', protect, authorize('employer'), async (req, res) => {
   }
 });
 
-// @desc    Update application status (Employers only)
+// @desc    Update application status (Staff only)
 // @route   PUT /api/applications/:id/status
-// @access  Private (employer)
-router.put('/:id/status', protect, authorize('employer'), async (req, res) => {
+// @access  Private (staff with manage_applications permission)
+router.put('/:id/status', protect, requirePermission('manage_applications'), async (req, res) => {
   try {
     const { status, note } = req.body;
 
-    const application = await Application.findById(req.params.id).populate('company');
+    const application = await Application.findById(req.params.id)
+      .populate('job')
+      .populate('department');
 
     if (!application) {
       return res.status(404).json({
@@ -207,16 +204,39 @@ router.put('/:id/status', protect, authorize('employer'), async (req, res) => {
       });
     }
 
-    // Verify employer owns the company
-    if (application.company.owner.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to update this application'
+    // For hiring managers, verify they have access to this department
+    if (req.user.role === 'hiring_manager' && req.user.department) {
+      if (application.department?._id.toString() !== req.user.department.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to update applications from other departments'
+        });
+      }
+    }
+
+    // Update status
+    const previousStatus = application.status;
+    application.status = status;
+    application.currentStage = status;
+    
+    // Add to status history if the method exists
+    if (application.statusHistory) {
+      application.statusHistory.push({
+        status,
+        changedBy: req.user.id,
+        note,
+        changedAt: new Date()
       });
     }
 
-    // Update status using method
-    await application.updateStatus(status, req.user.id, note);
+    // Handle rejection
+    if (status === 'rejected') {
+      application.rejectedAt = new Date();
+      application.rejectedBy = req.user.id;
+      application.rejectionReason = note;
+    }
+
+    await application.save();
 
     res.json({
       success: true,
@@ -231,10 +251,10 @@ router.put('/:id/status', protect, authorize('employer'), async (req, res) => {
   }
 });
 
-// @desc    Withdraw application (Job Seekers only)
+// @desc    Withdraw application (Candidates only)
 // @route   PUT /api/applications/:id/withdraw
-// @access  Private (jobseeker)
-router.put('/:id/withdraw', protect, authorize('jobseeker'), async (req, res) => {
+// @access  Private (candidate)
+router.put('/:id/withdraw', protect, requireRole('candidate'), async (req, res) => {
   try {
     const { reason } = req.body;
 
@@ -277,13 +297,13 @@ router.put('/:id/withdraw', protect, authorize('jobseeker'), async (req, res) =>
 
 // @desc    Get single application details
 // @route   GET /api/applications/:id
-// @access  Private (owner or employer)
+// @access  Private (owner or staff)
 router.get('/:id', protect, async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
       .populate('user', 'name email skills bio resume')
-      .populate('job', 'title company location salary type requirements')
-      .populate('company', 'name logo website');
+      .populate('job', 'title location employmentType requirements responsibilities')
+      .populate('department', 'name color');
 
     if (!application) {
       return res.status(404).json({
@@ -294,10 +314,9 @@ router.get('/:id', protect, async (req, res) => {
 
     // Check authorization
     const isOwner = application.user._id.toString() === req.user.id;
-    const isEmployer = application.company && 
-                       application.company.owner.toString() === req.user.id;
+    const staffMember = isStaff(req.user.role);
 
-    if (!isOwner && !isEmployer && req.user.role !== 'admin') {
+    if (!isOwner && !staffMember) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view this application'
