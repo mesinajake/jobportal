@@ -102,8 +102,8 @@ Edit `backend/.env` with your credentials:
 
 ```env
 # Required
-MONGODB_URI=mongodb+srv://your_username:your_password@cluster.mongodb.net/jobportal
-JWT_SECRET=your_super_secure_random_string_minimum_32_characters
+MONGODB_URI=<your-mongodb-atlas-connection-string>
+JWT_SECRET=<your-jwt-secret-minimum-32-characters>
 PORT=5000
 
 # Optional - for AI features

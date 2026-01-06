@@ -35,10 +35,10 @@ cp .env.example .env
 Edit `backend/.env` with your actual credentials:
 ```env
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/jobportal
+MONGODB_URI=<your-mongodb-atlas-connection-string>
 
 # JWT Secret (Generate a strong random string)
-JWT_SECRET=your_super_secret_jwt_key_min_32_chars
+JWT_SECRET=<your-jwt-secret-minimum-32-characters>
 
 # Email Configuration
 SMTP_USER=your_email@gmail.com
