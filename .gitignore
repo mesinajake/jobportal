@@ -1,52 +1,109 @@
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
+# ============================================
+# SECURITY - NEVER COMMIT SECRETS
+# ============================================
 
-# Environment variables
+# Environment variables - CRITICAL: Never commit these!
 .env
 .env.local
+.env.development
+.env.test
+.env.production
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Sensitive files
+credentials.json
+serviceAccountKey.json
+*.pem
+*.key
+*.cert
+secrets/
 
-# Build output
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules/
+package-lock.json
+yarn.lock
+.pnp
+.pnp.js
+
+# ============================================
+# BUILD OUTPUT
+# ============================================
 dist/
 build/
 .next/
 out/
 
-# IDE
+# ============================================
+# LOGS
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+*.test.js.snap
+
+# ============================================
+# RUNTIME DATA
+# ============================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# IDE & EDITORS
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Uploads (resume/avatar files)
+# ============================================
+# OS FILES
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# UPLOADS (User generated content)
+# ============================================
 backend/uploads/avatars/*
 backend/uploads/resumes/*
 !backend/uploads/avatars/.gitkeep
 !backend/uploads/resumes/.gitkeep
 
-# Test files
-coverage/
-.nyc_output/
-
-# Temporary files
+# ============================================
+# TEMPORARY FILES
+# ============================================
 *.tmp
 *.temp
 .cache/
+.temp/
 
-# OS files
-Thumbs.db
-.DS_Store
+# ============================================
+# DATABASE
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ============================================
+# DOCUMENTATION (Auto-generated guides - optional)
+# ============================================
+senior-dev-github-practices.md
