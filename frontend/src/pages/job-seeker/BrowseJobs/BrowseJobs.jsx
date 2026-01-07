@@ -26,28 +26,44 @@ export default function BrowseJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
   
   const { saved, toggle } = useSavedJobs();
   const { loggedIn } = useAuth();
 
   // Fetch departments on mount
   useEffect(() => {
+    let mounted = true;
+
     const fetchDepartments = async () => {
       try {
         const res = await apiClient.get('/departments');
-        if (res.success) setDepartments(res.data || []);
+        if (mounted && res.success) setDepartments(res.data || []);
       } catch (e) {
+        if (!mounted) return;
         console.error('Failed to fetch departments:', e);
       }
     };
+
     fetchDepartments();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Fetch jobs when filters change
+  // Fetch jobs when filters or page change
   useEffect(() => {
+    let mounted = true;
+
     const fetchJobs = async () => {
-      setLoading(true);
-      setError('');
+      if (mounted) {
+        setLoading(true);
+        setError('');
+      }
+
       try {
         const params = new URLSearchParams();
         if (q.trim()) params.set('search', q.trim());
@@ -55,21 +71,42 @@ export default function BrowseJobs() {
         if (employmentType) params.set('employmentType', employmentType);
         if (workArrangement) params.set('workArrangement', workArrangement);
         params.set('status', 'open');
+        params.set('page', currentPage.toString());
+        params.set('limit', '10');
         
         const res = await apiClient.get(`/jobs?${params.toString()}`);
+        
+        if (!mounted) return; // Component unmounted
+        
         if (res.success) {
           setJobs(res.data || []);
+          setTotalPages(res.pages || 1);
+          setTotalJobs(res.total || 0);
+          
+          // Scroll to top smoothly when page changes
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           setError('Failed to load jobs');
         }
       } catch (e) {
+        if (!mounted) return;
         console.error('Failed to fetch jobs:', e);
         setError('Unable to load jobs. Please try again.');
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
+
     fetchJobs();
+
+    return () => {
+      mounted = false;
+    };
+  }, [q, department, employmentType, workArrangement, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [q, department, employmentType, workArrangement]);
 
   const onSave = (jobId) => {
@@ -87,6 +124,7 @@ export default function BrowseJobs() {
     if (department) qs.set('department', department);
     if (employmentType) qs.set('type', employmentType);
     if (workArrangement) qs.set('arrangement', workArrangement);
+    setCurrentPage(1);
     navigate(`/careers${qs.toString() ? `?${qs.toString()}` : ''}`);
   };
 
@@ -95,7 +133,45 @@ export default function BrowseJobs() {
     setDepartment('');
     setEmploymentType('');
     setWorkArrangement('');
+    setCurrentPage(1);
     navigate('/careers');
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   return (
@@ -145,14 +221,6 @@ export default function BrowseJobs() {
               <option value="hybrid">Hybrid</option>
             </select>
           </div>
-          <div className="filter-buttons">
-            <button type="submit" className="btn-search">
-              <i className="fa-solid fa-search"></i> Search
-            </button>
-            <button type="button" className="btn-clear" onClick={clearFilters}>
-              Clear
-            </button>
-          </div>
         </form>
       </div>
 
@@ -161,7 +229,9 @@ export default function BrowseJobs() {
 
       {!loading && jobs.length > 0 && (
         <div className="results-info">
-          <p className="results-count">Showing <strong>{jobs.length}</strong> position{jobs.length !== 1 ? 's' : ''}</p>
+          <p className="results-count">
+            Showing <strong>{((currentPage - 1) * 10) + 1} - {Math.min(currentPage * 10, totalJobs)}</strong> of <strong>{totalJobs}</strong> position{totalJobs !== 1 ? 's' : ''}
+          </p>
         </div>
       )}
 
@@ -195,9 +265,30 @@ export default function BrowseJobs() {
               </p>
             )}
             <div className="job-actions">
-              <Link to={`/careers/${job._id}`} className="btn-view">View Details</Link>
-              <button className="btn-save" onClick={() => onSave(job._id)}>
-                {saved.includes(job._id) ? '♥ Saved' : '♡ Save'}
+              <Link to={`/careers/${job._id}`} className="btn">View Details</Link>
+              <button 
+                className={`btn-save ${loggedIn && saved.includes(job._id) ? 'saved' : ''}`}
+                onClick={() => onSave(job._id)}
+                aria-label={saved.includes(job._id) ? 'Unsave job' : 'Save job'}
+                title={loggedIn ? (saved.includes(job._id) ? 'Remove from saved' : 'Save for later') : 'Login to save jobs'}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    fill: loggedIn && saved.includes(job._id) ? '#2c3e50' : 'none',
+                    stroke: '#2c3e50',
+                    strokeWidth: '2px',
+                    strokeLinecap: 'round',
+                    strokeLinejoin: 'round',
+                    display: 'block'
+                  }}
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>{loggedIn && saved.includes(job._id) ? 'Saved' : 'Save'}</span>
               </button>
             </div>
           </div>
@@ -210,6 +301,49 @@ export default function BrowseJobs() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            <i className="fa-solid fa-chevron-left"></i>
+            <span>Previous</span>
+          </button>
+
+          <div className="pagination-numbers">
+            {getPageNumbers().map((page, index) => (
+              page === '...' ? (
+                <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+              ) : (
+                <button
+                  key={page}
+                  className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => handlePageChange(page)}
+                  aria-label={`Go to page ${page}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                >
+                  {page}
+                </button>
+              )
+            ))}
+          </div>
+
+          <button
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            aria-label="Next page"
+          >
+            <span>Next</span>
+            <i className="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

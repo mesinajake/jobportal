@@ -16,6 +16,8 @@ import {
   googleAuth,
   requestPhoneOTP,
   verifyPhoneOTP,
+  requestEmailOTP,
+  verifyEmailOTP,
   adminLogin
 } from '../controllers/authController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -38,6 +40,10 @@ router.post('/login', authLimiter, login);
 
 // Social Authentication (Google) - For candidates
 router.post('/google', authLimiter, googleAuth);
+
+// Email OTP Authentication (Passwordless) - For candidates
+router.post('/email/request-otp', authLimiter, requestEmailOTP);
+router.post('/email/verify-otp', authLimiter, verifyEmailOTP);
 
 // Phone Authentication (OTP) - For candidates
 router.post('/phone/request-otp', authLimiter, requestPhoneOTP);

@@ -3,6 +3,8 @@ import { apiClient } from '../services/api';
 
 // Company info from API
 let cachedCompanyInfo = null;
+// Shared promise for request deduplication
+let fetchPromise = null;
 
 export function useCompanyInfo() {
   const [companyInfo, setCompanyInfo] = useState(cachedCompanyInfo);
@@ -10,29 +12,54 @@ export function useCompanyInfo() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Return early if already cached
     if (cachedCompanyInfo) {
       setCompanyInfo(cachedCompanyInfo);
+      setLoading(false);
       return;
     }
 
-    const fetchCompanyInfo = async () => {
-      try {
-        const response = await apiClient.get('/company');
-        if (response.success) {
-          cachedCompanyInfo = response.data;
-          setCompanyInfo(response.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch company info:', err);
-        setError(err);
-        // Use fallback
-        setCompanyInfo(getDefaultCompanyInfo());
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Deduplicate concurrent requests
+    if (!fetchPromise) {
+      fetchPromise = apiClient.get('/company')
+        .then(response => {
+          if (response.success) {
+            cachedCompanyInfo = response.data;
+            return response.data;
+          }
+          throw new Error('Failed to fetch company info');
+        })
+        .catch(err => {
+          console.error('Failed to fetch company info:', err);
+          // Return fallback on error
+          return getDefaultCompanyInfo();
+        })
+        .finally(() => {
+          fetchPromise = null; // Reset for future calls
+        });
+    }
 
-    fetchCompanyInfo();
+    // Use the shared promise
+    let mounted = true;
+    fetchPromise
+      .then(data => {
+        if (mounted) {
+          setCompanyInfo(data);
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (mounted) {
+          setError(err);
+          setCompanyInfo(getDefaultCompanyInfo());
+          setLoading(false);
+        }
+      });
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return { companyInfo, loading, error };

@@ -71,6 +71,41 @@
     background: rgba(63, 111, 182, 0.1);
 }
 
+/* AI Analyzer Link - Special Styling */
+.nav-link-ai {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link-ai::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.nav-link-ai:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-link-ai:hover::before {
+    left: 100%;
+}
+
+.nav-link-ai.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+}
+
 .nav-auth {
     display: flex;
     align-items: center;

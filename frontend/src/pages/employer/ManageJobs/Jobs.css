@@ -228,7 +228,7 @@
 .jobs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -308,7 +308,7 @@
 }
 
 .job-location {
-  font-size: 0.9rem;
+  font-size: 1.5rem;
   color: var(--light-color, #666);
   margin-bottom: 1rem;
 }
@@ -466,10 +466,6 @@
 
   .filter-tabs {
     overflow-x: auto;
-  }
-
-  .jobs-grid {
-    grid-template-columns: 1fr;
   }
 
   .job-card-actions {

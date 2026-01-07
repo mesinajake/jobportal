@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import './JobAnalyzer.css';
 
 // API Base URL - use environment variable or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const JobAnalyzer = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { loggedIn } = useAuth();
+  
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');
@@ -12,6 +18,29 @@ const JobAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  // Restore form data after login
+  useEffect(() => {
+    if (loggedIn) {
+      const pending = sessionStorage.getItem('pendingAnalysis');
+      if (pending) {
+        try {
+          const data = JSON.parse(pending);
+          // Check if data is less than 10 minutes old
+          if (Date.now() - data.timestamp < 600000) {
+            if (data.resumeText) setResumeText(data.resumeText);
+            if (data.jobDescription) setJobDescription(data.jobDescription);
+            sessionStorage.removeItem('pendingAnalysis');
+            // Show success message
+            setError('');
+          }
+        } catch (err) {
+          console.error('Failed to restore form data:', err);
+        }
+      }
+    }
+  }, [loggedIn]);
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -44,6 +73,18 @@ const JobAnalyzer = () => {
       return;
     }
 
+    // ⭐ CHECK AUTH BEFORE PROCESSING
+    if (!loggedIn) {
+      // Save form data to sessionStorage so it persists after login
+      sessionStorage.setItem('pendingAnalysis', JSON.stringify({
+        resumeText: resumeText.trim(),
+        jobDescription: jobDescription.trim(),
+        timestamp: Date.now()
+      }));
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setError('');
     setLoading(true);
     setAnalysis(null);
@@ -53,7 +94,8 @@ const JobAnalyzer = () => {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setError('Please login to use AI features');
+        setError('Session expired. Please login again.');
+        setShowLoginPrompt(true);
         setLoading(false);
         return;
       }
@@ -135,11 +177,11 @@ const JobAnalyzer = () => {
   };
 
   const getScoreDescription = (score) => {
-    if (score >= 90) return 'This candidate meets or exceeds all key requirements';
-    if (score >= 75) return 'This candidate meets most requirements with minor gaps';
-    if (score >= 60) return 'This candidate meets core requirements but lacks some skills';
-    if (score >= 40) return 'This candidate has potential but needs development in key areas';
-    return 'This candidate is missing critical requirements for this role';
+    if (score >= 90) return 'This candidate is an exceptional match for the role with outstanding qualifications and experience.';
+    if (score >= 75) return 'This candidate has strong qualifications that align well with the job requirements.';
+    if (score >= 60) return 'This candidate meets most of the key requirements and shows good potential.';
+    if (score >= 40) return 'This candidate has some relevant experience but may need additional training or development.';
+    return 'The candidate is missing critical requirements for this role';
   };
 
   return (
@@ -148,12 +190,69 @@ const JobAnalyzer = () => {
         <div className="job-analyzer-card">
           <div className="analyzer-header">
             <h1 className="analyzer-title">
-              AI Resume Analyzer
+              🤖 AI Resume Analyzer
             </h1>
             <p className="analyzer-subtitle">
               Analyze how well a resume matches a job description using AI
             </p>
           </div>
+
+      {/* Login Banner for Non-Authenticated Users */}
+      {!loggedIn && (
+        <div className="login-banner">
+          <h2>🔒 Sign In Required</h2>
+          <p>Create a free account to unlock powerful AI-driven career tools</p>
+          
+          <div className="login-banner-benefits">
+            <div className="benefit-item">
+              <span className="benefit-icon">🎯</span>
+              <div className="benefit-text">
+                <h3>AI Resume Analysis</h3>
+                <p>Get instant AI-powered insights on how your resume matches job requirements</p>
+              </div>
+            </div>
+            
+            <div className="benefit-item">
+              <span className="benefit-icon">💼</span>
+              <div className="benefit-text">
+                <h3>Job Match Scoring</h3>
+                <p>See compatibility scores and personalized recommendations</p>
+              </div>
+            </div>
+            
+            <div className="benefit-item">
+              <span className="benefit-icon">📊</span>
+              <div className="benefit-text">
+                <h3>Skill Gap Analysis</h3>
+                <p>Identify missing skills and get suggestions for improvement</p>
+              </div>
+            </div>
+            
+            <div className="benefit-item">
+              <span className="benefit-icon">⚡</span>
+              <div className="benefit-text">
+                <h3>Actionable Feedback</h3>
+                <p>Receive detailed recommendations to strengthen your application</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="login-banner-actions">
+            <button 
+              className="btn-login"
+              onClick={() => navigate('/login', { state: { from: location.pathname } })}
+            >
+              Sign In
+            </button>
+            <button 
+              className="btn-register"
+              onClick={() => navigate('/register', { state: { from: location.pathname } })}
+            >
+              Create Free Account
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -163,8 +262,12 @@ const JobAnalyzer = () => {
         </div>
       )}
 
-      {/* Input Form */}
-      <form onSubmit={handleAnalyze} className="analyzer-form">
+      {/* Input Form - Disabled when not logged in */}
+      <form 
+        onSubmit={handleAnalyze} 
+        className="analyzer-form"
+        style={!loggedIn ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+      >
         <div className="form-grid">
           {/* Resume Text Input */}
           <div className="input-section">
@@ -456,6 +559,70 @@ We are seeking a talented Full Stack Developer with:
             </p>
             <p className="info-note">
               ⚡ Note: Make sure Ollama is running on your local machine
+
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div className="login-prompt-overlay" onClick={() => setShowLoginPrompt(false)}>
+          <div className="login-prompt-modal" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="modal-close-btn"
+              onClick={() => setShowLoginPrompt(false)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            
+            <div className="modal-icon">
+              🔐
+            </div>
+            
+            <h3 className="modal-title">Sign In Required</h3>
+            <p className="modal-description">
+              Create a free account to analyze resumes with our AI-powered tool
+            </p>
+            
+            <ul className="benefits-list">
+              <li>
+                <span className="benefit-icon">✅</span>
+                <span>Unlimited AI resume analyses</span>
+              </li>
+              <li>
+                <span className="benefit-icon">✅</span>
+                <span>Save and track your applications</span>
+              </li>
+              <li>
+                <span className="benefit-icon">✅</span>
+                <span>Get personalized job recommendations</span>
+              </li>
+              <li>
+                <span className="benefit-icon">✅</span>
+                <span>Access exclusive company features</span>
+              </li>
+            </ul>
+            
+            <div className="modal-actions">
+              <button 
+                className="btn-modal-primary"
+                onClick={() => navigate('/login', { state: { from: location.pathname } })}
+              >
+                <i className="fa-solid fa-sign-in-alt"></i>
+                Sign In
+              </button>
+              <button 
+                className="btn-modal-secondary"
+                onClick={() => navigate('/register', { state: { from: location.pathname } })}
+              >
+                <i className="fa-solid fa-user-plus"></i>
+                Create Free Account
+              </button>
+            </div>
+            
+            <p className="modal-footer-text">
+              Your form data will be saved and restored after login
+            </p>
+          </div>
+        </div>
+      )}
             </p>
           </div>
         </div>

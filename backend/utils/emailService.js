@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+// Load environment variables immediately when this module is imported
+dotenv.config();
 
 /**
  * Email Service Utility
@@ -10,60 +14,57 @@ import crypto from 'crypto';
 class EmailService {
   constructor() {
     this.transporter = null;
-    this.initializeTransporter();
+    this.initialized = false;
   }
 
   /**
    * Initialize email transporter with environment configuration
-   * Supports both SMTP and Gmail
+   * Uses lazy initialization to ensure env vars are loaded
    */
-  initializeTransporter() {
+  ensureInitialized() {
+    if (this.initialized) return;
+    
+    this.initialized = true;
+    
+    // Debug: Log what we're reading from environment
+    console.log('\n🔧 Email Service Initialization:');
+    console.log('  SMTP_HOST:', process.env.SMTP_HOST || 'NOT SET');
+    console.log('  SMTP_PORT:', process.env.SMTP_PORT || 'NOT SET');
+    console.log('  SMTP_USER:', process.env.SMTP_USER || 'NOT SET');
+    console.log('  SMTP_PASS:', process.env.SMTP_PASS ? `${process.env.SMTP_PASS.substring(0, 4)}****${process.env.SMTP_PASS.substring(process.env.SMTP_PASS.length - 4)} (${process.env.SMTP_PASS.length} chars)` : 'NOT SET');
+    
     try {
-      // For development: Use ethereal email or configure SMTP
-      if (process.env.NODE_ENV === 'development' && !process.env.SMTP_HOST) {
-        console.log('⚠️  Email service running in development mode without SMTP configuration');
-        console.log('📧 Emails will be logged to console only');
+      // Check if we have SMTP credentials
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.log('⚠️  No SMTP credentials found - running in console-only mode');
+        console.log('📧 Emails will be logged to console only\n');
+        this.transporter = null;
         return;
       }
 
-      // Use default import properly
-      if (typeof nodemailer === 'function') {
-        this.transporter = nodemailer({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 10000
-        });
-      } else if (nodemailer.createTransport) {
-        this.transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 10000
-        });
-      }
+      // Create transporter with Gmail settings
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000
+      });
 
-      console.log('✅ Email service initialized successfully');
+      console.log('✅ Email service initialized successfully\n');
     } catch (error) {
       console.error('❌ Email service initialization failed:', error.message);
+      this.transporter = null;
     }
   }
 
   /**
    * Generate secure verification token
-   * Best Practice: Use crypto for secure token generation
    */
   generateVerificationToken() {
     return crypto.randomBytes(32).toString('hex');
@@ -71,21 +72,21 @@ class EmailService {
 
   /**
    * Generate reset password token with expiry
-   * Best Practice: Tokens should expire for security
    */
   generateResetToken() {
     const token = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
     return { token, hashedToken, expires };
   }
 
   /**
    * Send email with retry logic
-   * Best Practice: Implement retry mechanism for transient failures
    */
   async sendEmail(options, retries = 3) {
+    // Ensure initialized before sending
+    this.ensureInitialized();
+    
     const { to, subject, html, text } = options;
 
     // Validate required fields
@@ -93,14 +94,20 @@ class EmailService {
       throw new Error('Missing required email fields: to, subject, and content (html or text)');
     }
 
-    // Development mode: Log email instead of sending
+    // Development/Console mode: Log email instead of sending
     if (!this.transporter) {
-      console.log('\n📧 ===== EMAIL (Development Mode) =====');
+      console.log('\n📧 ===== EMAIL (Console Mode) =====');
       console.log('To:', to);
       console.log('Subject:', subject);
-      console.log('Content:', text || 'HTML content provided');
+      
+      // Extract OTP from subject or content for easy testing
+      const otpMatch = subject.match(/(\d{6})/);
+      if (otpMatch) {
+        console.log('🔑 OTP CODE:', otpMatch[1]);
+      }
+      
       console.log('=====================================\n');
-      return { success: true, mode: 'development' };
+      return { success: true, mode: 'console' };
     }
 
     // Production mode: Send actual email with retry logic
@@ -135,7 +142,6 @@ class EmailService {
 
   /**
    * Send verification email to new users
-   * Best Practice: Separate methods for different email types
    */
   async sendVerificationEmail(user, verificationToken) {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
@@ -149,7 +155,7 @@ class EmailService {
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background-color: #3f6fb6; color: white; padding: 20px; text-align: center; }
           .content { background-color: #f9f9f9; padding: 30px; }
-          .button { display: inline-block; padding: 12px 30px; background-color: #3f6fb6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+          .btn { display: inline-block; padding: 12px 24px; background-color: #3f6fb6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
           .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
         </style>
       </head>
@@ -161,12 +167,11 @@ class EmailService {
           <div class="content">
             <h2>Hi ${user.name},</h2>
             <p>Thank you for registering with Job Portal. Please verify your email address to complete your registration.</p>
-            <p>Click the button below to verify your email:</p>
-            <a href="${verificationUrl}" class="button">Verify Email Address</a>
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #3f6fb6;">${verificationUrl}</p>
-            <p><strong>This link will expire in 24 hours.</strong></p>
-            <p>If you didn't create an account with us, please ignore this email.</p>
+            <p style="text-align: center;">
+              <a href="${verificationUrl}" class="btn">Verify Email Address</a>
+            </p>
+            <p><small>If you didn't create this account, you can safely ignore this email.</small></p>
+            <p><small>This link will expire in 24 hours.</small></p>
           </div>
           <div class="footer">
             <p>&copy; ${new Date().getFullYear()} Job Portal. All rights reserved.</p>
@@ -181,16 +186,11 @@ class EmailService {
       
       Hi ${user.name},
       
-      Thank you for registering with Job Portal. Please verify your email address to complete your registration.
-      
-      Click the link below to verify your email:
-      ${verificationUrl}
+      Please verify your email by clicking this link: ${verificationUrl}
       
       This link will expire in 24 hours.
       
-      If you didn't create an account with us, please ignore this email.
-      
-      © ${new Date().getFullYear()} Job Portal. All rights reserved.
+      If you didn't create this account, you can safely ignore this email.
     `;
 
     return await this.sendEmail({
@@ -203,7 +203,6 @@ class EmailService {
 
   /**
    * Send password reset email
-   * Best Practice: Include security warnings
    */
   async sendPasswordResetEmail(user, resetToken) {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
@@ -215,9 +214,9 @@ class EmailService {
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #d9534f; color: white; padding: 20px; text-align: center; }
+          .header { background-color: #3f6fb6; color: white; padding: 20px; text-align: center; }
           .content { background-color: #f9f9f9; padding: 30px; }
-          .button { display: inline-block; padding: 12px 30px; background-color: #d9534f; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+          .btn { display: inline-block; padding: 12px 24px; background-color: #3f6fb6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
           .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
           .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
         </style>
@@ -229,20 +228,15 @@ class EmailService {
           </div>
           <div class="content">
             <h2>Hi ${user.name},</h2>
-            <p>We received a request to reset your password for your Job Portal account.</p>
-            <p>Click the button below to reset your password:</p>
-            <a href="${resetUrl}" class="button">Reset Password</a>
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #d9534f;">${resetUrl}</p>
+            <p>We received a request to reset your password. Click the button below to create a new password:</p>
+            <p style="text-align: center;">
+              <a href="${resetUrl}" class="btn">Reset Password</a>
+            </p>
             <div class="warning">
-              <strong>⚠️ Security Notice:</strong>
-              <ul>
-                <li>This link will expire in 1 hour</li>
-                <li>If you didn't request this reset, please ignore this email</li>
-                <li>Your password will remain unchanged until you create a new one</li>
-                <li>Never share this link with anyone</li>
-              </ul>
+              <p><strong>Security Notice:</strong></p>
+              <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
             </div>
+            <p><small>This link will expire in 1 hour for security reasons.</small></p>
           </div>
           <div class="footer">
             <p>&copy; ${new Date().getFullYear()} Job Portal. All rights reserved.</p>
@@ -257,31 +251,23 @@ class EmailService {
       
       Hi ${user.name},
       
-      We received a request to reset your password for your Job Portal account.
+      We received a request to reset your password. Click this link to reset: ${resetUrl}
       
-      Click the link below to reset your password:
-      ${resetUrl}
+      This link will expire in 1 hour.
       
-      ⚠️ Security Notice:
-      - This link will expire in 1 hour
-      - If you didn't request this reset, please ignore this email
-      - Your password will remain unchanged until you create a new one
-      - Never share this link with anyone
-      
-      © ${new Date().getFullYear()} Job Portal. All rights reserved.
+      If you didn't request this, please ignore this email.
     `;
 
     return await this.sendEmail({
       to: user.email,
-      subject: 'Password Reset Request - Job Portal',
+      subject: 'Reset Your Password - Job Portal',
       html,
       text
     });
   }
 
   /**
-   * Send 2FA verification code for employers
-   * Best Practice: Separate 2FA email for enhanced security
+   * Send 2FA verification code
    */
   async send2FACode(user, code) {
     const html = `
@@ -291,9 +277,9 @@ class EmailService {
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #5cb85c; color: white; padding: 20px; text-align: center; }
+          .header { background-color: #3f6fb6; color: white; padding: 20px; text-align: center; }
           .content { background-color: #f9f9f9; padding: 30px; text-align: center; }
-          .code { font-size: 32px; letter-spacing: 8px; color: #3f6fb6; font-weight: bold; background-color: #e9ecef; padding: 20px; border-radius: 5px; margin: 20px 0; }
+          .code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3f6fb6; background: white; padding: 20px; border-radius: 8px; margin: 30px 0; display: inline-block; }
           .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
         </style>
       </head>
@@ -327,13 +313,79 @@ class EmailService {
       This code will expire in 10 minutes.
       
       If you didn't request this code, please secure your account immediately.
-      
-      © ${new Date().getFullYear()} Job Portal. All rights reserved.
     `;
 
     return await this.sendEmail({
       to: user.email,
       subject: 'Your 2FA Verification Code - Job Portal',
+      html,
+      text
+    });
+  }
+
+  /**
+   * Send OTP verification code via email
+   */
+  async sendOTPEmail(user, otp) {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #3f6fb6; color: white; padding: 20px; text-align: center; }
+          .content { background-color: #f9f9f9; padding: 30px; text-align: center; }
+          .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3f6fb6; background: white; padding: 20px; border-radius: 8px; margin: 30px 0; display: inline-block; border: 2px dashed #3f6fb6; }
+          .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; text-align: left; }
+          .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 Your Verification Code</h1>
+          </div>
+          <div class="content">
+            <h2>Hi ${user.name || 'there'},</h2>
+            <p>Your one-time verification code for Job Portal is:</p>
+            <div class="otp-code">${otp}</div>
+            <p><strong>This code will expire in 10 minutes.</strong></p>
+            <div class="warning">
+              <p><strong>⚠️ Security Notice:</strong></p>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Never share this code with anyone</li>
+                <li>Job Portal staff will never ask for this code</li>
+                <li>If you didn't request this code, please ignore this email</li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} Job Portal. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+      Your Verification Code
+      
+      Hi ${user.name || 'there'},
+      
+      Your one-time verification code for Job Portal is: ${otp}
+      
+      This code will expire in 10 minutes.
+      
+      Security Notice:
+      - Never share this code with anyone
+      - Job Portal staff will never ask for this code
+      - If you didn't request this code, please ignore this email
+    `;
+
+    return await this.sendEmail({
+      to: user.email,
+      subject: `Your Verification Code: ${otp} - Job Portal`,
       html,
       text
     });

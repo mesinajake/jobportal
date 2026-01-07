@@ -7,9 +7,6 @@
   padding: 2rem 1rem;
 }
 
-.auth-container.register-container {
-  max-width: 520px;
-}
 
 .auth-container {
   background: white;

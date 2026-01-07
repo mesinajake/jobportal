@@ -8,11 +8,12 @@ import rateLimit from 'express-rate-limit';
 
 /**
  * General API rate limiter
- * 100 requests per 15 minutes per IP
+ * 100 requests per 15 minutes per IP (production)
+ * 1000 requests per 15 minutes (development) to handle React Strict Mode
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Higher limit in dev
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again after 15 minutes'
@@ -22,7 +23,15 @@ export const apiLimiter = rateLimit({
   // Best Practice: Skip successful requests from counting against rate limit for certain actions
   skipSuccessfulRequests: false,
   // Best Practice: Skip failed requests to prevent attackers from filling up the limit
-  skipFailedRequests: false
+  skipFailedRequests: false,
+  // Skip rate limiting for localhost in development
+  skip: (req) => {
+    if (process.env.NODE_ENV === 'development') {
+      const ip = req.ip || req.connection.remoteAddress;
+      return ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1';
+    }
+    return false;
+  }
 });
 
 /**

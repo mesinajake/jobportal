@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import useSavedJobs from '../../../hooks/useSavedJobs';
+import { apiClient } from '../../../services/api';
 import './SearchJobs.css';
 
 const SearchJobs = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { loggedIn } = useAuth();
+  const { saved, toggle } = useSavedJobs();
+  
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -14,18 +22,78 @@ const SearchJobs = () => {
   });
 
   useEffect(() => {
-    // TODO: Fetch jobs with filters
-    setLoading(false);
+    let mounted = true;
+
+    const fetchJobs = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (filters.keyword.trim()) params.set('search', filters.keyword.trim());
+        if (filters.location.trim()) params.set('location', filters.location.trim());
+        if (filters.type) params.set('employmentType', filters.type);
+        params.set('status', 'open');
+
+        const res = await apiClient.get(`/jobs?${params.toString()}`);
+        
+        if (!mounted) return;
+        
+        if (res.success) {
+          setJobs(res.data || []);
+        }
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Failed to fetch jobs:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchJobs();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    // TODO: Search with current filters
+    setLoading(true);
+
+    try {
+      const params = new URLSearchParams();
+      if (filters.keyword.trim()) params.set('search', filters.keyword.trim());
+      if (filters.location.trim()) params.set('location', filters.location.trim());
+      if (filters.type) params.set('employmentType', filters.type);
+      params.set('status', 'open');
+
+      const res = await apiClient.get(`/jobs?${params.toString()}`);
+      
+      if (res.success) {
+        setJobs(res.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to search jobs:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveJob = (jobId) => {
+    if (!loggedIn) {
+      // Redirect to login with current page as return location
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+    // Toggle saved state
+    toggle(jobId);
+  };
+
+  const isJobSaved = (jobId) => {
+    return saved.includes(jobId);
   };
 
   return (
@@ -122,7 +190,30 @@ const SearchJobs = () => {
                   
                   <div className="job-actions">
                     <Link to={`/jobs/${job._id}`} className="btn-view">View Details</Link>
-                    <button className="btn-save">♡ Save</button>
+                    <button 
+                      className={`btn-save ${loggedIn && isJobSaved(job._id) ? 'saved' : ''}`}
+                      onClick={() => handleSaveJob(job._id)}
+                      aria-label={isJobSaved(job._id) ? 'Unsave job' : 'Save job'}
+                      title={loggedIn ? (isJobSaved(job._id) ? 'Remove from saved' : 'Save for later') : 'Login to save jobs'}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24"
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          fill: loggedIn && isJobSaved(job._id) ? '#2c3e50' : 'none',
+                          stroke: '#2c3e50',
+                          strokeWidth: '2px',
+                          strokeLinecap: 'round',
+                          strokeLinejoin: 'round',
+                          display: 'block'
+                        }}
+                      >
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                      <span>{loggedIn && isJobSaved(job._id) ? 'Saved' : 'Save'}</span>
+                    </button>
                   </div>
                 </div>
               ))

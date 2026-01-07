@@ -176,12 +176,16 @@ const Login = () => {
       </div>
 
       <div className="email-signin-link">
-        <Link to="/login/email" className="btn-email-signin">
-          Sign in with Email
+        <Link to="/login/email-otp" className="btn-email-signin">
+          <svg viewBox="0 0 24 24" className="email-icon" fill="currentColor" style={{width: '20px', height: '20px', marginRight: '8px'}}>
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          Sign in with Email (Passwordless)
         </Link>
       </div>
 
       <div className="auth-footer">
+        <p>Traditional login? <Link to="/login/email">Sign in with Password</Link></p>
         <p>Don't have an account? <Link to="/register">Sign Up</Link></p>
         <p className="admin-link">
           <Link to="/admin/login">Staff / Admin Login</Link>

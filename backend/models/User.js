@@ -22,7 +22,10 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
+      required: function() {
+        // Password only required for traditional email/password login
+        return this.authProvider === 'local';
+      },
       minlength: [6, 'Password must be at least 6 characters'],
       select: false // Don't return password by default
     },
@@ -200,7 +203,7 @@ const userSchema = new mongoose.Schema(
     // Social Authentication
     authProvider: {
       type: String,
-      enum: ['local', 'google', 'phone'],
+      enum: ['local', 'google', 'phone', 'email'],
       default: 'local'
     },
     googleId: {
@@ -217,6 +220,14 @@ const userSchema = new mongoose.Schema(
       default: false
     },
     phoneOtp: {
+      code: String,
+      expiresAt: Date,
+      attempts: {
+        type: Number,
+        default: 0
+      }
+    },
+    emailOtp: {
       code: String,
       expiresAt: Date,
       attempts: {
@@ -241,8 +252,15 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving (only for local auth)
 userSchema.pre('save', async function (next) {
-  // Skip password hashing for social auth users
-  if (this.authProvider !== 'local' || !this.isModified('password')) {
+  // Skip password validation and hashing for non-local auth
+  if (this.authProvider !== 'local') {
+    // Remove password field for non-local auth if accidentally set
+    this.password = undefined;
+    return next();
+  }
+  
+  // For local auth, hash password if modified
+  if (!this.isModified('password')) {
     return next();
   }
   

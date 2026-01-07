@@ -238,6 +238,24 @@ export const login = async (req, res) => {
       });
     }
 
+    // Validate email is a string
+    if (typeof email !== 'string') {
+      console.log('❌ Invalid email format - expected string, got:', typeof email);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Validate password is a string
+    if (typeof password !== 'string') {
+      console.log('❌ Invalid password format - expected string, got:', typeof password);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid password format'
+      });
+    }
+
     // Check for user (include password for comparison)
     const user = await User.findOne({ email }).select('+password');
 
@@ -1096,6 +1114,234 @@ export const adminLogin = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Request Email OTP for passwordless login
+// @route   POST /api/auth/email/request-otp
+// @access  Public
+export const requestEmailOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address is required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    // Check rate limiting (max 3 OTP requests per 15 minutes per email)
+    const recentOTPCount = await User.countDocuments({
+      email,
+      'emailOtp.expiresAt': { $gt: new Date(Date.now() - 15 * 60 * 1000) }
+    });
+
+    if (recentOTPCount >= 3) {
+      return res.status(429).json({
+        success: false,
+        message: 'Too many OTP requests. Please try again in 15 minutes.'
+      });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ email });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      // Create new candidate account for email OTP
+      user = new User({
+        email,
+        name: 'Email User', // Temporary, will update after OTP verification
+        authProvider: 'email',
+        role: 'candidate',
+        isVerified: false,
+        password: undefined // Explicitly set to undefined for email auth
+      });
+    } else {
+      // For existing users, check if they're using a different auth method
+      if (user.authProvider === 'local' && user.password) {
+        // User already has password-based account
+        // We can still allow OTP login as an alternative
+        console.log(`Existing password user ${email} requesting OTP login`);
+      }
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Hash OTP for storage
+    const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+    
+    // Store OTP data
+    user.emailOtp = {
+      code: hashedOTP,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      attempts: 0
+    };
+
+    try {
+      await user.save({ validateBeforeSave: true });
+    } catch (saveError) {
+      console.error('Error saving user with OTP:', saveError);
+      throw new Error(`Failed to create/update user: ${saveError.message}`);
+    }
+
+    // Send OTP email
+    try {
+      await emailService.sendOTPEmail(user, otp);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Verification code sent to your email',
+        data: {
+          email,
+          isNewUser,
+          expiresIn: 600 // 10 minutes in seconds
+        }
+      });
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      
+      // Clean up OTP data if email fails
+      user.emailOtp = undefined;
+      await user.save();
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification code. Please try again.'
+      });
+    }
+  } catch (error) {
+    console.error('Email OTP request error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      message: process.env.NODE_ENV === 'development' 
+        ? `Error: ${error.message}` 
+        : 'Failed to process request. Please try again.'
+    });
+  }
+};
+
+// @desc    Verify Email OTP and login/register
+// @route   POST /api/auth/email/verify-otp
+// @access  Public
+export const verifyEmailOTP = async (req, res) => {
+  try {
+    const { email, otp, name } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and verification code are required'
+      });
+    }
+
+    // Validate OTP format (6 digits)
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid verification code format'
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+
+    if (!user || !user.emailOtp || !user.emailOtp.code) {
+      return res.status(404).json({
+        success: false,
+        message: 'No verification code found. Please request a new one.'
+      });
+    }
+
+    // Check if OTP expired
+    if (new Date() > new Date(user.emailOtp.expiresAt)) {
+      user.emailOtp = undefined;
+      await user.save();
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Verification code has expired. Please request a new one.'
+      });
+    }
+
+    // Check max attempts (3 attempts allowed)
+    if (user.emailOtp.attempts >= 3) {
+      user.emailOtp = undefined;
+      await user.save();
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Too many failed attempts. Please request a new code.'
+      });
+    }
+
+    // Verify OTP
+    const hashedInputOTP = crypto.createHash('sha256').update(otp).digest('hex');
+    
+    if (hashedInputOTP !== user.emailOtp.code) {
+      // Increment attempts
+      user.emailOtp.attempts += 1;
+      await user.save();
+      
+      const attemptsRemaining = 3 - user.emailOtp.attempts;
+      
+      return res.status(400).json({
+        success: false,
+        message: `Invalid verification code. ${attemptsRemaining} attempt(s) remaining.`,
+        attemptsRemaining
+      });
+    }
+
+    // OTP verified successfully!
+    user.isVerified = true;
+    user.emailOtp = undefined; // Clear OTP data
+    user.lastLogin = new Date();
+
+    // Update name if provided (for new users)
+    if (name && user.name === 'Email User') {
+      user.name = name;
+    }
+
+    await user.save();
+
+    // Generate JWT token
+    const token = generateToken(user._id, user.role);
+
+    res.status(200).json({
+      success: true,
+      message: 'Email verification successful',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          authProvider: user.authProvider,
+          isVerified: user.isVerified,
+          needsProfileUpdate: user.name === 'Email User'
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Email OTP verification error:', error);
     res.status(500).json({
       success: false,
       message: error.message

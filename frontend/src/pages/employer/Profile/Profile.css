@@ -768,12 +768,10 @@
 section {
     padding: 2rem;
     margin: 0 auto;
-    max-width: 1200px;
 }
 
 .btn {
     display: inline-block;
-    margin-top: 1rem;
     padding: 1rem 3rem;
     cursor: pointer;
     font-size: 1.8rem;

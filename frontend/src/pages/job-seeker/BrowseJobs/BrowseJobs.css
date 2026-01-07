@@ -20,9 +20,6 @@
     font-weight: 700;
     color: var(--black);
     margin-bottom: 0.75rem;
-    background: linear-gradient(135deg, #1a1a2e 0%, #38a169 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
@@ -35,11 +32,12 @@
 
 /* ===== Search/Filter Section ===== */
 .filter-section {
+    max-width: 120rem;
+    margin: 0 auto 3rem;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     padding: 2.5rem;
     border-radius: 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    margin-bottom: 3rem;
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -80,7 +78,7 @@
 }
 
 .filter-group input[type="text"]:focus {
-    border-color: #38a169;
+    border-color: var(--main-color);
     outline: none;
     box-shadow: 0 0 0 4px rgba(56, 161, 105, 0.1);
 }
@@ -130,7 +128,7 @@
 }
 
 .filter-group select:focus {
-    border-color: #38a169;
+    border-color: var(--main-color);
     outline: none;
     box-shadow: 0 0 0 4px rgba(56, 161, 105, 0.1);
 }
@@ -220,17 +218,16 @@
 
 /* ===== Results Count ===== */
 .results-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
+    margin-bottom: 2rem;   
 }
 
 .results-count {
+    max-width: 120rem;
+    margin: 0 auto 3rem;
     font-size: 1.5rem;
     color: var(--light-color);
     font-weight: 500;
+    text-align: left;
 }
 
 .results-count strong {
@@ -345,7 +342,7 @@
 }
 
 .job-location i {
-    color: #38a169;
+    color: var(--main-color);
     font-size: 1.3rem;
 }
 
@@ -428,31 +425,61 @@
 }
 
 .btn-save {
-    padding: 1.2rem 1.5rem;
-    font-size: 1.4rem;
-    font-weight: 500;
-    color: #64748b;
-    background: #f1f5f9;
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #2c3e50;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.75rem;
+    cursor: pointer;
 }
 
 .btn-save:hover {
-    background: #fef2f2;
-    color: #dc2626;
-    border-color: #fecaca;
-    transform: scale(1.05);
+    background: #e8e8e8;
+    border-color: #2c3e50;
 }
 
 .btn-save.saved {
-    background: #fef2f2;
-    color: #dc2626;
-    border-color: #fecaca;
+    background: #e8f4f8;
+    border-color: #2c3e50;
+    color: #2c3e50;
+}
+
+.btn-save.saved:hover {
+    background: #d0e8f0;
+}
+
+.btn-save svg {
+    flex-shrink: 0;
+    display: block;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+
+.btn-save.saved svg {
+    animation: saveAnimation 0.3s ease;
+}
+
+.btn-save span {
+    display: inline-block;
+}
+
+@keyframes saveAnimation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* ===== No Results ===== */
@@ -482,6 +509,99 @@
 .no-results p {
     font-size: 1.5rem;
     color: #64748b;
+}
+
+/* ===== Pagination ===== */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 4rem;
+    padding: 2rem 0;
+}
+
+.pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.2rem 2rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--black);
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: var(--main-color);
+    background: #f0fdf4;
+    color: var(--main-color);
+    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.2);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f8fafc;
+}
+
+.pagination-btn i {
+    font-size: 1.2rem;
+}
+
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.pagination-number {
+    min-width: 4.5rem;
+    height: 4.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--black);
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pagination-number:hover {
+    border-color: var(--main-color);
+    background: #f0fdf4;
+    color: var(--main-color);
+}
+
+.pagination-number.active {
+    background: var(--black);
+    color: #fff;
+    cursor: default;
+    box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+}
+
+.pagination-number.active:hover {
+    transform: none;
+}
+
+.pagination-ellipsis {
+    min-width: 4.5rem;
+    height: 4.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #94a3b8;
 }
 
 /* ===== Responsive Design ===== */
@@ -541,6 +661,31 @@
 
     .job-card {
         padding: 2rem;
+    }
+
+    .pagination {
+        gap: 0.8rem;
+        margin-top: 3rem;
+    }
+
+    .pagination-btn span {
+        display: none;
+    }
+
+    .pagination-btn {
+        padding: 1.2rem;
+        min-width: 4.5rem;
+    }
+
+    .pagination-number {
+        min-width: 4rem;
+        height: 4rem;
+        font-size: 1.3rem;
+    }
+
+    .pagination-ellipsis {
+        min-width: 4rem;
+        height: 4rem;
     }
 }
 
@@ -608,7 +753,6 @@
 
     .btn-view,
     .btn-save {
-        width: 100%;
         padding: 1.3rem;
     }
 
@@ -688,5 +832,36 @@
 
     .no-results p {
         font-size: 1.3rem;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 2.5rem;
+        padding: 1.5rem 0;
+    }
+
+    .pagination-numbers {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .pagination-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.3rem;
+    }
+
+    .pagination-number {
+        min-width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.2rem;
+    }
+
+    .pagination-ellipsis {
+        min-width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.4rem;
     }
 }

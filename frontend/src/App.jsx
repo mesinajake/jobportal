@@ -10,6 +10,7 @@ import { Home, About, Contact } from './pages/common'
 // Auth pages
 import { Login, Register } from './pages/auth'
 import EmailLogin from './pages/auth/Login/EmailLogin/EmailLogin.jsx'
+import EmailOTPLogin from './pages/auth/EmailOTPLogin/EmailOTPLogin.jsx'
 import AdminLogin from './pages/auth/AdminLogin/AdminLogin.jsx'
 
 // Candidate pages (formerly job-seeker)
@@ -47,6 +48,7 @@ function App() {
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/login/email" element={<EmailLogin />} />
+          <Route path="/login/email-otp" element={<EmailOTPLogin />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           

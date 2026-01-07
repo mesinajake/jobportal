@@ -6,7 +6,7 @@
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    min-height: 100vh;
+    min-height: 90vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -52,14 +52,14 @@
 .home .search-job button {
     padding: 1.5rem 3rem;
     font-size: 1.8rem;
-    background: var(--main-color);
+    background: var(--black);
     color: var(--white);
     cursor: pointer;
     border: none;
 }
 
 .home .search-job button:hover {
-    background: var(--black);
+    background: var(--main-color);
 }
 
 /* Suggestions dropdown */
@@ -219,6 +219,21 @@
 
 .btn:hover {
     background-color: var(--main-color);
+    color: var(--white);
+}
+
+
+.btn-outline {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
 }
 
 /* ========================================
@@ -252,35 +267,82 @@
     line-height: 1.6;
 }
 
-.btn-primary {
-    background-color: var(--main-color);
+.btn-careers-primary {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
     color: var(--white);
-}
-
-.btn-primary:hover {
     background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
 }
 
-.btn-secondary {
-    background-color: transparent;
-    border: 2px solid var(--white);
-    color: var(--white);
-}
-
-.btn-secondary:hover {
+.btn-careers-primary:hover {
     background-color: var(--white);
     color: var(--black);
 }
 
-.btn-outline {
-    background-color: transparent;
-    border: 2px solid var(--main-color);
-    color: var(--main-color);
+.btn-about-secondary {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
 }
+
+.btn-about-secondary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
 
 .btn-outline:hover {
     background-color: var(--main-color);
     color: var(--white);
+}
+
+.btn-explore-primary {
+    max-width: 50rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-explore-primary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+.btn-register-secondary {
+    max-width: 50rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-register-secondary:hover {
+    background-color: var(--white);
+    color: var(--black);
 }
 
 /* Why Join Us Section */
@@ -291,7 +353,7 @@
 
 .benefits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: 2rem;
     max-width: 1200px;
     margin: 0 auto;
@@ -378,7 +440,8 @@
     padding: 6rem 2rem;
 }
 
-.latest-openings .box-container {
+.latest-openings .box-container,
+.latest-openings .jobs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
     gap: 2rem;
@@ -393,6 +456,8 @@
     border: var(--border);
     box-shadow: var(--box-shadow);
     transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .job-card:hover {
@@ -406,42 +471,150 @@
     flex-wrap: wrap;
 }
 
-.department-tag {
+.department-tag,
+.department-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
     font-size: 1.2rem;
     color: var(--white);
     background: var(--main-color);
     border-radius: 2rem;
+    font-weight: 600;
 }
 
-.employment-type {
+.employment-type,
+.type-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
     font-size: 1.2rem;
     color: var(--black);
     background: var(--light-bg);
     border-radius: 2rem;
+    font-weight: 500;
 }
 
 .job-card .job-title {
     font-size: 2rem;
     color: var(--black);
     margin-bottom: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
 }
 
 .job-card .location,
-.job-card .work-arrangement {
+.job-card .work-arrangement,
+.job-card .job-location,
+.job-card .job-arrangement {
     font-size: 1.4rem;
     color: var(--light-color);
     margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .job-card .location i,
-.job-card .work-arrangement i {
+.job-card .work-arrangement i,
+.job-card .job-location i,
+.job-card .job-arrangement i {
     color: var(--main-color);
-    margin-right: 0.8rem;
     width: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.job-card .job-salary {
+    font-size: 1.4rem;
+    color: #38a169;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.job-card .job-salary i {
+    font-size: 1.3rem;
+}
+
+.job-card-actions,
+.job-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: auto;
+    align-items: center;
+    padding-top: 1.5rem;
+}
+
+.job-card-actions .btn,
+.job-actions .btn {
+    flex: 1;
+}
+
+.btn-save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #2c3e50;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover:not(:disabled) {
+    background: #e8e8e8;
+    border-color: #2c3e50;
+}
+
+.btn-save.saved {
+    background: #e8f4f8;
+    border-color: #2c3e50;
+    color: #2c3e50;
+}
+
+.btn-save.saved:hover {
+    background: #d0e8f0;
+}
+
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-save i {
+    font-size: 1.8rem;
+}
+
+.btn-save svg {
+    flex-shrink: 0;
+    display: block;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+.btn-save.saved svg {
+    animation: saveAnimation 0.3s ease;
+}
+
+.btn-save span {
+    display: inline-block;
+}
+
+@keyframes saveAnimation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .loading-spinner {
@@ -451,9 +624,33 @@
     color: var(--light-color);
 }
 
-.no-jobs {
+.no-jobs,
+.no-results {
     text-align: center;
     padding: 4rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 1.5rem;
+    border: 2px dashed #e2e8f0;
+    grid-column: 1 / -1;
+}
+
+.no-results i {
+    font-size: 6rem;
+    color: #cbd5e1;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.no-results h3 {
+    font-size: 2.2rem;
+    color: var(--black);
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.no-results p {
+    font-size: 1.5rem;
+    color: #64748b;
 }
 
 .no-jobs p {
@@ -543,25 +740,6 @@
     flex-wrap: wrap;
 }
 
-.cta-buttons .btn-primary {
-    background: var(--white);
-    color: var(--main-color);
-}
-
-.cta-buttons .btn-primary:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-.cta-buttons .btn-secondary {
-    border-color: var(--white);
-    color: var(--white);
-}
-
-.cta-buttons .btn-secondary:hover {
-    background: var(--white);
-    color: var(--main-color);
-}
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {

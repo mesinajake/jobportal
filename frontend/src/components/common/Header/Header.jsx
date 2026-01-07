@@ -64,13 +64,13 @@ export default function Header() {
           <NavLink to="/about" className="nav-link">About</NavLink>
           <NavLink to="/contact" className="nav-link">Contact</NavLink>
           
+          {/* AI Analyzer visible to all, with smart redirect */}
+          <NavLink to="/analyzer" className="nav-link nav-link-ai">
+            <i className="fa-solid fa-robot"></i> AI Analyzer
+          </NavLink>
+          
           {loggedIn && (
-            <>
-              <NavLink to={getDashboardLink()} className="nav-link">Dashboard</NavLink>
-              <NavLink to="/analyzer" className="nav-link">
-                <i className="fa-solid fa-robot"></i> AI Analyzer
-              </NavLink>
-            </>
+            <NavLink to={getDashboardLink()} className="nav-link">Dashboard</NavLink>
           )}
           
           {loggedIn ? (

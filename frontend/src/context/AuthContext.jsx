@@ -222,6 +222,15 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Set authenticated user directly (for OTP, social login, etc.)
+  const setAuthenticatedUser = (userData, token) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(userData))
+    apiClient.setToken(token)
+    setUser(userData)
+    setLoggedIn(true)
+  }
+
   const value = useMemo(
     () => ({ 
       user, 
@@ -231,6 +240,7 @@ export function AuthProvider({ children }) {
       register, 
       logout, 
       updateUser, 
+      setAuthenticatedUser,
       isStaff, 
       hasRole,
       // Social auth methods

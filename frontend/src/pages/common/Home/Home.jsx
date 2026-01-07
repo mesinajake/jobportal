@@ -10,27 +10,58 @@ export default function Home() {
   const [jobs, setJobs] = useState([])
   const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [savedJobs, setSavedJobs] = useState(new Set())
+  const [savingJob, setSavingJob] = useState(null)
   const navigate = useNavigate()
   const { companyInfo } = useCompanyInfo()
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!localStorage.getItem('token')
 
   // Fetch latest jobs and departments
   useEffect(() => {
+    const controller = new AbortController();
+    let mounted = true;
+
     const fetchData = async () => {
       try {
-        const [jobsRes, deptRes] = await Promise.all([
+        const requests = [
           apiClient.get('/jobs?limit=6&status=open'),
           apiClient.get('/departments')
-        ])
-        if (jobsRes.success) setJobs(jobsRes.data || [])
-        if (deptRes.success) setDepartments(deptRes.data || [])
+        ];
+        
+        // Fetch saved jobs if user is authenticated
+        if (isAuthenticated) {
+          requests.push(apiClient.get('/saved-jobs'));
+        }
+        
+        const responses = await Promise.all(requests);
+        
+        if (!mounted) return; // Component unmounted, don't update state
+        
+        if (responses[0].success) setJobs(responses[0].data || []);
+        if (responses[1].success) setDepartments(responses[1].data || []);
+        
+        // Set saved jobs if user is authenticated
+        if (isAuthenticated && responses[2]?.success) {
+          const savedJobIds = new Set(responses[2].data.map(sj => sj.job._id || sj.job));
+          setSavedJobs(savedJobIds);
+        }
       } catch (err) {
-        console.error('Failed to fetch data:', err)
+        if (err.name === 'AbortError' || !mounted) return;
+        console.error('Failed to fetch data:', err);
       } finally {
-        setLoading(false)
+        if (mounted) setLoading(false);
       }
-    }
-    fetchData()
-  }, [])
+    };
+
+    fetchData();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
+  }, [isAuthenticated])
 
   const handleChange = (e) => {
     const v = e.target.value
@@ -56,6 +87,38 @@ export default function Home() {
   const handleSubmit = (e) => {
     e.preventDefault()
     navigate(`/careers?q=${encodeURIComponent(q.trim())}`)
+  }
+
+  const handleSaveJob = async (jobId) => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/' } });
+      return;
+    }
+
+    setSavingJob(jobId);
+    const isSaved = savedJobs.has(jobId);
+
+    try {
+      if (isSaved) {
+        const response = await apiClient.delete(`/saved-jobs/${jobId}`);
+        if (response.success) {
+          setSavedJobs(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(jobId);
+            return newSet;
+          });
+        }
+      } else {
+        const response = await apiClient.post('/saved-jobs', { jobId });
+        if (response.success) {
+          setSavedJobs(prev => new Set(prev).add(jobId));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save/unsave job:', err);
+    } finally {
+      setSavingJob(null);
+    }
   }
 
   return (
@@ -92,8 +155,8 @@ export default function Home() {
             )}
           </form>
           <div className="links">
-            <Link to="/careers" className="btn btn-primary">View All Positions</Link>
-            <Link to="/about" className="btn btn-secondary">Learn About Us</Link>
+            <Link to="/careers" className="btn-careers-primary">View All Positions</Link>
+            <Link to="/about" className="btn-about-secondary">Learn About Us</Link>
           </div>
         </div>
       </section>
@@ -139,43 +202,78 @@ export default function Home() {
         <h2 className="heading">Latest Openings</h2>
         {loading ? (
           <div className="loading-spinner">Loading opportunities...</div>
-        ) : jobs.length > 0 ? (
-          <div className="box-container">
+        ) : (
+          <div className="jobs-grid">
             {jobs.map(job => (
-              <div className="box job-card" key={job._id}>
+              <div className="job-card" key={job._id}>
                 <div className="job-header">
                   <span 
-                    className="department-tag"
+                    className="department-badge"
                     style={{ backgroundColor: job.department?.color || '#4A90A4' }}
                   >
                     {job.department?.name || 'General'}
                   </span>
                   {job.employmentType && (
-                    <span className="employment-type">{formatEmploymentType(job.employmentType)}</span>
+                    <span className="type-badge">{formatEmploymentType(job.employmentType)}</span>
                   )}
                 </div>
-                <h3 className="job-title">{job.title}</h3>
-                <p className="location">
-                  <i className="fa-solid fa-location-dot"></i> {job.location || 'Remote'}
+                <h2 className="job-title">{job.title}</h2>
+                <p className="job-location">
+                  <i className="fa-solid fa-location-dot"></i> {job.location || 'Location TBD'}
                 </p>
                 {job.workArrangement && (
-                  <p className="work-arrangement">
+                  <p className="job-arrangement">
                     <i className="fa-solid fa-briefcase"></i> {formatWorkArrangement(job.workArrangement)}
                   </p>
                 )}
-                <Link to={`/careers/${job._id}`} className="btn">View Details</Link>
+                {job.salaryRange?.min && (
+                  <p className="job-salary">
+                    <i className="fa-solid fa-peso-sign"></i> 
+                    {formatSalary(job.salaryRange)}
+                  </p>
+                )}
+                <div className="job-actions">
+                  <Link to={`/careers/${job._id}`} className="btn">View Details</Link>
+                  <button 
+                    className={`btn-save ${isAuthenticated && savedJobs.has(job._id) ? 'saved' : ''}`}
+                    onClick={() => handleSaveJob(job._id)}
+                    disabled={savingJob === job._id}
+                    aria-label={savedJobs.has(job._id) ? 'Unsave job' : 'Save job'}
+                    title={isAuthenticated ? (savedJobs.has(job._id) ? 'Remove from saved' : 'Save for later') : 'Login to save jobs'}
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24"
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        fill: isAuthenticated && savedJobs.has(job._id) ? '#2c3e50' : 'none',
+                        stroke: '#2c3e50',
+                        strokeWidth: '2px',
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        display: 'block'
+                      }}
+                    >
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>{isAuthenticated && savedJobs.has(job._id) ? 'Saved' : 'Save'}</span>
+                  </button>
+                </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="no-jobs">
-            <p>No open positions at the moment. Check back soon!</p>
-            <Link to="/register" className="btn">Join Our Talent Network</Link>
+            {jobs.length === 0 && !loading && (
+              <div className="no-results">
+                <i className="fa-solid fa-briefcase"></i>
+                <h3>No positions found</h3>
+                <p>Check back later for new opportunities</p>
+              </div>
+            )}
           </div>
         )}
         {jobs.length > 0 && (
           <div className="view-all-jobs">
-            <Link to="/careers" className="btn btn-outline">View All Positions</Link>
+            <Link to="/careers" className="btn-outline">View All Positions</Link>
           </div>
         )}
       </section>
@@ -213,8 +311,8 @@ export default function Home() {
           <h2>Ready to Start Your Journey?</h2>
           <p>Join our team and make an impact. We're always looking for talented individuals.</p>
           <div className="cta-buttons">
-            <Link to="/careers" className="btn btn-primary">Explore Opportunities</Link>
-            <Link to="/register" className="btn btn-secondary">Create Profile</Link>
+            <Link to="/careers" className="btn-explore-primary">Explore Opportunities</Link>
+            <Link to="/register" className="btn-register-secondary">Create Profile</Link>
           </div>
         </div>
       </section>
@@ -281,4 +379,12 @@ function formatWorkArrangement(arrangement) {
     'hybrid': 'Hybrid'
   }
   return arrangements[arrangement] || arrangement
+}
+
+function formatSalary(range) {
+  const format = (n) => n.toLocaleString()
+  if (range.min && range.max) {
+    return `${format(range.min)} - ${format(range.max)}`
+  }
+  return range.min ? `From ${format(range.min)}` : ''
 }
