@@ -1,117 +1,119 @@
 import { useState } from 'react';
 import './Contact.css';
 
-export default function Contact() {
+const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     subject: '',
     message: ''
   });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Here you would typically send the form data to your backend
     console.log('Contact form submitted:', formData);
-    alert('Thank you for your message! We will get back to you soon.');
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    }, 3000);
   };
 
   return (
-    <section className="contact">
-      <h1 className="heading">Contact Us</h1>
-      
-      <div className="contact-container">
+    <div className="contact-container">
+      <section className="contact-hero">
+        <h1>Contact Us</h1>
+        <p>We'd love to hear from you. Send us a message!</p>
+      </section>
+
+      <section className="contact-content">
         <div className="contact-info">
-          <div className="info-box">
-            <i className="fa-solid fa-location-dot"></i>
-            <div>
-              <h3>Address</h3>
-              <p>123 Business Street, Metro Manila, Philippines</p>
-            </div>
+          <h2>Get In Touch</h2>
+          <div className="info-item">
+            <h3>📧 Email</h3>
+            <p>support@jobportal.com</p>
           </div>
-          <div className="info-box">
-            <i className="fa-solid fa-phone"></i>
-            <div>
-              <h3>Phone</h3>
-              <p>+63 123 456 7890</p>
-            </div>
+          <div className="info-item">
+            <h3>📱 Phone</h3>
+            <p>+1 (555) 123-4567</p>
           </div>
-          <div className="info-box">
-            <i className="fa-solid fa-envelope"></i>
-            <div>
-              <h3>Email</h3>
-              <p>support@applitrak.com</p>
-            </div>
+          <div className="info-item">
+            <h3>📍 Address</h3>
+            <p>123 Business St<br />San Francisco, CA 94107</p>
           </div>
-          <div className="info-box">
-            <i className="fa-solid fa-clock"></i>
-            <div>
-              <h3>Working Hours</h3>
-              <p>Monday - Friday: 9AM - 6PM</p>
-            </div>
+          <div className="info-item">
+            <h3>⏰ Hours</h3>
+            <p>Monday - Friday<br />9:00 AM - 6:00 PM PST</p>
           </div>
         </div>
 
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <h3>Send us a Message</h3>
-          <div className="form-group">
-            <input
-              type="text"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <input
-              type="email"
-              name="email"
-              placeholder="Your Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Your Phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              value={formData.subject}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <textarea
-              name="message"
-              placeholder="Your Message"
-              rows="5"
-              value={formData.message}
-              onChange={handleChange}
-              required
-            ></textarea>
-          </div>
-          <button type="submit" className="btn">Send Message</button>
-        </form>
-      </div>
-    </section>
+        <div className="contact-form-wrapper">
+          <h2>Send Us A Message</h2>
+          {submitted && (
+            <div className="success-message">
+              Thank you! We'll get back to you soon.
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="contact-form">
+            <div className="form-group">
+              <label htmlFor="name">Name *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="subject">Subject *</label>
+              <input
+                type="text"
+                id="subject"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="message">Message *</label>
+              <textarea
+                id="message"
+                name="message"
+                rows="6"
+                value={formData.message}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <button type="submit" className="submit-btn">Send Message</button>
+          </form>
+        </div>
+      </section>
+    </div>
   );
-}
+};
+
+export default Contact;
