@@ -25,10 +25,12 @@ import jobRoutes from './routes/jobRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import savedJobRoutes from './routes/savedJobRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
-import companyRoutes from './routes/companyRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
+import interviewRoutes from './routes/interviewRoutes.js';
+import { getPublicCompanyInfo } from './config/company.js';
 
 // Load environment variables
 dotenv.config();
@@ -67,7 +69,8 @@ app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Welcome to Job Portal API',
-    version: '1.0.0',
+    version: '2.0.0',
+    company: getPublicCompanyInfo().name,
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
@@ -75,10 +78,20 @@ app.get('/', (req, res) => {
       users: '/api/users',
       savedJobs: '/api/saved-jobs',
       ai: '/api/ai',
-      companies: '/api/companies',
+      departments: '/api/departments',
       analytics: '/api/analytics',
-      alerts: '/api/alerts'
+      alerts: '/api/alerts',
+      interviews: '/api/interviews',
+      company: '/api/company'
     }
+  });
+});
+
+// Company info route (single endpoint)
+app.get('/api/company', (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: getPublicCompanyInfo()
   });
 });
 
@@ -88,10 +101,11 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/saved-jobs', savedJobRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/companies', companyRoutes);
+app.use('/api/departments', departmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/alerts', jobAlertRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/interviews', interviewRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

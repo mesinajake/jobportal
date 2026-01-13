@@ -18,7 +18,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="box">
+        <div className="footer-box">
           <h3>Extra Links</h3>
           <Link to="/login">Login</Link>
           <Link to="/register">Register</Link>
@@ -26,14 +26,14 @@ export default function Footer() {
           <Link to="/dashboard">Dashboard</Link>
         </div>
 
-        <div className="box">
+        <div className="footer-box">
           <h3>Explore</h3>
           <a href="#">Top Companies</a>
           <a href="#">Terms of Service</a>
           <a href="#">Careers</a>
         </div>
 
-        <div className="box">
+        <div className="footer-box">
           <h3>Company</h3>
           <Link to="/contact">Contact</Link>
           <Link to="/about">About Us</Link>

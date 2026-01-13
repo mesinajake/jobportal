@@ -1,0 +1,55 @@
+/* AuthLayout.css - Authentication layout styles */
+
+.auth-layout {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--light-bg) 0%, #e8f4f8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-layout .auth-container {
+    width: 100%;
+    max-width: 50rem;
+}
+
+.auth-layout .auth-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.auth-layout .auth-logo {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--black);
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.auth-layout .auth-logo i {
+    color: var(--main-color);
+    font-size: 3.5rem;
+}
+
+.auth-layout .auth-logo:hover {
+    color: var(--main-color);
+}
+
+.auth-layout .auth-content {
+    background: var(--white);
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 4rem 3rem;
+}
+
+.auth-layout .auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.auth-layout .auth-footer p {
+    font-size: 1.4rem;
+    color: var(--light-color);
+}

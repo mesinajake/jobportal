@@ -1,0 +1,152 @@
+/* JobSeekerLayout.css - Job seeker dashboard layout styles */
+
+.jobseeker-layout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--light-bg);
+}
+
+/* Sidebar styles */
+.jobseeker-sidebar {
+    width: 26rem;
+    background: linear-gradient(180deg, #276749 0%, #38a169 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+}
+
+.jobseeker-sidebar .sidebar-header {
+    padding: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jobseeker-sidebar .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.jobseeker-sidebar .sidebar-logo i {
+    color: #9ae6b4;
+    font-size: 2.5rem;
+}
+
+.jobseeker-sidebar .sidebar-nav {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.jobseeker-sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.6rem;
+    transition: all 0.3s ease;
+}
+
+.jobseeker-sidebar .nav-item:hover,
+.jobseeker-sidebar .nav-item.active {
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid #9ae6b4;
+}
+
+.jobseeker-sidebar .nav-item i {
+    width: 2rem;
+    text-align: center;
+}
+
+.jobseeker-sidebar .sidebar-footer {
+    padding: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jobseeker-sidebar .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: .5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.jobseeker-sidebar .logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+/* Main content area */
+.jobseeker-main {
+    flex: 1;
+    margin-left: 26rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.jobseeker-header {
+    background: var(--white);
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.jobseeker-header .header-title h2 {
+    font-size: 2rem;
+    color: var(--black);
+}
+
+.jobseeker-header .header-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.5rem;
+    color: var(--black);
+}
+
+.jobseeker-header .header-user i {
+    font-size: 3rem;
+    color: #38a169;
+}
+
+.jobseeker-content {
+    flex: 1;
+    padding: 3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .jobseeker-sidebar {
+        width: 7rem;
+    }
+    
+    .jobseeker-sidebar .sidebar-logo span,
+    .jobseeker-sidebar .nav-item span,
+    .jobseeker-sidebar .logout-btn span {
+        display: none;
+    }
+    
+    .jobseeker-main {
+        margin-left: 7rem;
+    }
+}

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { companyConfig } from '../config/company.js';
 
 const jobSchema = new mongoose.Schema(
   {
@@ -8,17 +9,27 @@ const jobSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Title cannot be more than 100 characters']
     },
-    company: {
-      type: String,
-      required: [true, 'Please provide a company name'],
-      trim: true
-    },
-    // NEW: Company reference for internally posted jobs
-    companyRef: {
+    // Department this job belongs to (replaces company reference)
+    department: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Company'
+      ref: 'Department',
+      required: [true, 'Please select a department']
     },
-    companyLogo: String,
+    // Hiring manager for this position
+    hiringManager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    // Number of positions to fill
+    positions: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
+    positionsFilled: {
+      type: Number,
+      default: 0
+    },
     description: {
       type: String,
       required: [true, 'Please provide a job description'],
@@ -29,7 +40,7 @@ const jobSchema = new mongoose.Schema(
       required: [true, 'Please provide a location'],
       trim: true
     },
-    // GeoJSON for location-based queries (FIXED)
+    // GeoJSON for location-based queries
     locationDetails: {
       type: {
         type: String,
@@ -94,18 +105,15 @@ const jobSchema = new mongoose.Schema(
       unique: true,
       trim: true
     },
-    externalUrl: {
-      type: String, // For jobs from external APIs
-      trim: true
+    // Internal job posting flags
+    internalOnly: {
+      type: Boolean,
+      default: false // If true, only visible to company employees
     },
-    source: {
-      type: String,
-      enum: ['internal', 'ziprecruiter', 'arbeitnow', 'remotive', 'adzuna', 'jsearch', 'other'],
-      default: 'internal'
+    referralBonus: {
+      type: Number,
+      default: 0
     },
-    // NEW: Track external job IDs to prevent duplicates
-    externalId: String,
-    lastSyncedAt: Date,
     requirements: {
       type: [String],
       default: []
@@ -118,7 +126,6 @@ const jobSchema = new mongoose.Schema(
       type: [String],
       default: []
     },
-    // NEW: Additional fields
     experienceLevel: {
       type: String,
       enum: ['entry', 'mid', 'senior', 'lead', 'executive']
@@ -128,10 +135,30 @@ const jobSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // Status with approval workflow
     status: {
       type: String,
-      enum: ['draft', 'pending', 'active', 'paused', 'closed', 'expired', 'rejected'],
+      enum: ['draft', 'pending_approval', 'approved', 'open', 'paused', 'closed', 'filled', 'cancelled'],
       default: 'draft'
+    },
+    // Approval tracking
+    approvalInfo: {
+      submittedAt: Date,
+      submittedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      approvedAt: Date,
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      rejectedAt: Date,
+      rejectedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      rejectionReason: String
     },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -167,16 +194,17 @@ const jobSchema = new mongoose.Schema(
 );
 
 // Create index for search
-jobSchema.index({ title: 'text', company: 'text', description: 'text', location: 'text' });
+jobSchema.index({ title: 'text', description: 'text', location: 'text' });
 
-// NEW: Geospatial index for location-based queries (sparse: only index docs with coordinates)
+// Geospatial index for location-based queries (sparse: only index docs with coordinates)
 jobSchema.index({ 'locationDetails.coordinates': '2dsphere' }, { sparse: true });
 
-// NEW: Compound indexes for common queries
+// Department-based queries
+jobSchema.index({ department: 1, status: 1, createdAt: -1 });
 jobSchema.index({ status: 1, isActive: 1, createdAt: -1 });
-jobSchema.index({ companyRef: 1, status: 1 });
 jobSchema.index({ category: 1, type: 1, isActive: 1 });
-jobSchema.index({ source: 1, externalId: 1 }, { unique: true, sparse: true });
+jobSchema.index({ hiringManager: 1, status: 1 });
+jobSchema.index({ internalOnly: 1, status: 1 });
 
 // Method to get days ago
 jobSchema.virtual('posted').get(function () {

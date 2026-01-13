@@ -1,0 +1,765 @@
+/* Home.css - Home page styles */
+
+/* Hero section styles */
+.home {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/pnc.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home .content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 80rem;
+}
+
+.home .content span {
+    font-size: 2rem;
+    color: var(--main-color);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.home .content h3 {
+    font-size: 4rem;
+    color: var(--white);
+    margin-bottom: 2rem;
+}
+
+/* Search form styles */
+.home .search-job {
+    display: flex;
+    max-width: 60rem;
+    margin: 2rem auto;
+    background: var(--white);
+    border-radius: .5rem;
+    overflow: hidden;
+}
+
+.home .search-job input {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    font-size: 1.6rem;
+    border: none;
+    outline: none;
+}
+
+.home .search-job button {
+    padding: 1.5rem 3rem;
+    font-size: 1.8rem;
+    background: var(--black);
+    color: var(--white);
+    cursor: pointer;
+    border: none;
+}
+
+.home .search-job button:hover {
+    background: var(--main-color);
+}
+
+/* Suggestions dropdown */
+.home .suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: var(--border);
+    border-top: none;
+    border-radius: 0 0 .5rem .5rem;
+    list-style: none;
+    z-index: 100;
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+.home .suggestions li {
+    padding: 1.2rem 2rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--black);
+    text-align: left;
+}
+
+.home .suggestions li:hover {
+    background: var(--light-bg);
+}
+
+/* Links section */
+.home .links {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Category section */
+.category {
+    padding: 5rem 2rem;
+    background: var(--light-bg);
+}
+
+.category .box-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.category .box {
+    background: var(--white);
+    padding: 3rem 2rem;
+    text-align: center;
+    border-radius: .5rem;
+    box-shadow: var(--box-shadow);
+    transition: transform .3s ease;
+}
+
+.category .box:hover {
+    transform: translateY(-5px);
+}
+
+.category .box i {
+    font-size: 4rem;
+    color: var(--main-color);
+    margin-bottom: 1.5rem;
+}
+
+.category .box h3 {
+    font-size: 1.8rem;
+    color: var(--black);
+}
+
+/* Jobs section */
+.jobs {
+    padding: 5rem 2rem;
+}
+
+.jobs .box-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.jobs .box {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: .5rem;
+    border: var(--border);
+    box-shadow: var(--box-shadow);
+}
+
+.jobs .box .company {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.jobs .box .company img {
+    width: 6rem;
+    height: 6rem;
+    object-fit: contain;
+}
+
+.jobs .box .company h3 {
+    font-size: 1.8rem;
+    color: var(--black);
+}
+
+.jobs .box .company p {
+    font-size: 1.4rem;
+    color: var(--light-color);
+}
+
+.jobs .box .job-title {
+    font-size: 2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.jobs .box .location {
+    font-size: 1.5rem;
+    color: var(--light-color);
+    margin-bottom: 1.5rem;
+}
+
+.jobs .box .location i {
+    color: var(--main-color);
+    margin-right: .5rem;
+}
+
+/* Shared styles */
+.heading {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 3rem;
+    color: var(--black);
+}
+
+.btn {
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--main-color);
+    color: var(--white);
+}
+
+
+.btn-outline {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+/* ========================================
+   CAREERS LANDING PAGE STYLES
+   ======================================== */
+
+/* Hero Section Enhancements */
+.careers-hero .company-branding {
+    margin-bottom: 2rem;
+}
+
+.careers-hero .company-logo-hero {
+    max-width: 15rem;
+    max-height: 8rem;
+    object-fit: contain;
+}
+
+.careers-hero .tagline {
+    font-size: 2rem;
+    color: var(--main-color);
+    font-weight: 500;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+}
+
+.careers-hero .hero-description {
+    font-size: 1.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 60rem;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.btn-careers-primary {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-careers-primary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+.btn-about-secondary {
+    max-width: 30rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-about-secondary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+
+.btn-outline:hover {
+    background-color: var(--main-color);
+    color: var(--white);
+}
+
+.btn-explore-primary {
+    max-width: 50rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-explore-primary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+.btn-register-secondary {
+    max-width: 50rem;
+    display: inline-block;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--black);
+    border-radius: .5rem;
+    text-align: center;
+}
+
+.btn-register-secondary:hover {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+/* Why Join Us Section */
+.why-join-us {
+    padding: 6rem 2rem;
+    background: var(--light-bg);
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.benefit-card {
+    background: var(--white);
+    padding: 3rem 2rem;
+    text-align: center;
+    border-radius: 1rem;
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+}
+
+.benefit-card i {
+    font-size: 4rem;
+    color: var(--main-color);
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.benefit-card h4 {
+    font-size: 1.6rem;
+    color: var(--black);
+    font-weight: 500;
+}
+
+/* Departments Section */
+.departments-section {
+    padding: 6rem 2rem;
+    background: var(--white);
+}
+
+.departments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.department-card {
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    border-left: 4px solid var(--main-color);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+}
+
+.department-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+}
+
+.department-card h4 {
+    font-size: 1.8rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.department-card p {
+    font-size: 1.4rem;
+    color: var(--light-color);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.dept-jobs-count {
+    font-size: 1.3rem;
+    color: var(--main-color);
+    font-weight: 600;
+}
+
+/* Latest Openings Section */
+.latest-openings {
+    background: var(--light-bg);
+    padding: 6rem 2rem;
+}
+
+.latest-openings .box-container,
+.latest-openings .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.job-card {
+    background: var(--white);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    border: var(--border);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.job-card:hover {
+    transform: translateY(-3px);
+}
+
+.job-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.department-tag,
+.department-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    color: var(--white);
+    background: var(--main-color);
+    border-radius: 2rem;
+    font-weight: 600;
+}
+
+.employment-type,
+.type-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    color: var(--black);
+    background: var(--light-bg);
+    border-radius: 2rem;
+    font-weight: 500;
+}
+
+.job-card .job-title {
+    font-size: 2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.job-card .location,
+.job-card .work-arrangement,
+.job-card .job-location,
+.job-card .job-arrangement {
+    font-size: 1.4rem;
+    color: var(--light-color);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.job-card .location i,
+.job-card .work-arrangement i,
+.job-card .job-location i,
+.job-card .job-arrangement i {
+    color: var(--main-color);
+    width: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.job-card .job-salary {
+    font-size: 1.4rem;
+    color: #38a169;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.job-card .job-salary i {
+    font-size: 1.3rem;
+}
+
+.job-card-actions,
+.job-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: auto;
+    align-items: center;
+    padding-top: 1.5rem;
+}
+
+.job-card-actions .btn,
+.job-actions .btn {
+    flex: 1;
+}
+
+.btn-save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #2c3e50;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover:not(:disabled) {
+    background: #e8e8e8;
+    border-color: #2c3e50;
+}
+
+.btn-save.saved {
+    background: #e8f4f8;
+    border-color: #2c3e50;
+    color: #2c3e50;
+}
+
+.btn-save.saved:hover {
+    background: #d0e8f0;
+}
+
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-save i {
+    font-size: 1.8rem;
+}
+
+.btn-save svg {
+    flex-shrink: 0;
+    display: block;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+.btn-save.saved svg {
+    animation: saveAnimation 0.3s ease;
+}
+
+.btn-save span {
+    display: inline-block;
+}
+
+@keyframes saveAnimation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 4rem;
+    font-size: 1.6rem;
+    color: var(--light-color);
+}
+
+.no-jobs,
+.no-results {
+    text-align: center;
+    padding: 4rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 1.5rem;
+    border: 2px dashed #e2e8f0;
+    grid-column: 1 / -1;
+}
+
+.no-results i {
+    font-size: 6rem;
+    color: #cbd5e1;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.no-results h3 {
+    font-size: 2.2rem;
+    color: var(--black);
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.no-results p {
+    font-size: 1.5rem;
+    color: #64748b;
+}
+
+.no-jobs p {
+    font-size: 1.8rem;
+    color: var(--light-color);
+    margin-bottom: 2rem;
+}
+
+.view-all-jobs {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+/* Company Culture Section */
+.company-culture {
+    padding: 6rem 2rem;
+    background: var(--white);
+}
+
+.culture-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.culture-text {
+    text-align: center;
+}
+
+.culture-text p {
+    font-size: 1.8rem;
+    color: var(--light-color);
+    line-height: 1.8;
+    margin-bottom: 3rem;
+}
+
+.culture-highlights {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    flex-wrap: wrap;
+}
+
+.highlight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.highlight i {
+    font-size: 3rem;
+    color: var(--main-color);
+}
+
+.highlight span {
+    font-size: 1.5rem;
+    color: var(--black);
+    font-weight: 500;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 8rem 2rem;
+    background: linear-gradient(135deg, var(--main-color), #2c3e50);
+    text-align: center;
+}
+
+.cta-content h2 {
+    font-size: 3.5rem;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+}
+
+.cta-content p {
+    font-size: 1.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 3rem;
+    max-width: 60rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .careers-hero .hero-description {
+        font-size: 1.5rem;
+    }
+    
+    .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .departments-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .culture-highlights {
+        gap: 2rem;
+    }
+    
+    .cta-content h2 {
+        font-size: 2.5rem;
+    }
+}

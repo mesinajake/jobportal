@@ -5,17 +5,32 @@ import {
   createJob,
   updateJob,
   deleteJob,
-  searchExternalJobs
+  approveJob,
+  rejectJob,
+  getPendingJobs,
+  getJobsByDepartment
 } from '../controllers/jobController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
+import { requirePermission, requireRole, requireStaff } from '../middleware/roleAccess.js';
 
 const router = express.Router();
 
+// Public routes
 router.get('/', getJobs);
-router.get('/search/external', searchExternalJobs);
+router.get('/by-department/:departmentId', getJobsByDepartment);
 router.get('/:id', getJob);
-router.post('/', protect, authorize('employer', 'admin'), createJob);
-router.put('/:id', protect, authorize('employer', 'admin'), updateJob);
-router.delete('/:id', protect, authorize('employer', 'admin'), deleteJob);
+
+// Protected routes - require authentication
+router.use(protect);
+
+// Staff can create and manage jobs
+router.post('/', requirePermission('create_job'), createJob);
+router.put('/:id', requirePermission('edit_own_jobs'), updateJob);
+router.delete('/:id', requirePermission('delete_job'), deleteJob);
+
+// Approval workflow routes (Hiring Manager/HR/Admin)
+router.get('/admin/pending-approval', requireRole('hiring_manager', 'hr', 'admin'), getPendingJobs);
+router.put('/:id/approve', requirePermission('approve_job_posting'), approveJob);
+router.put('/:id/reject', requirePermission('approve_job_posting'), rejectJob);
 
 export default router;

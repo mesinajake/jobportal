@@ -1,22 +1,36 @@
 import Job from '../models/Job.js';
-import Company from '../models/Company.js';
+import Department from '../models/Department.js';
 import Analytics from '../models/Analytics.js';
-import { fetchExternalJobs } from '../services/jobApiService.js';
+import { companyConfig } from '../config/company.js';
 
 // @desc    Get all jobs with filters
 // @route   GET /api/jobs
 // @access  Public
 export const getJobs = async (req, res) => {
   try {
-    const { search, location, type, category, page = 1, limit = 20, includeExternal = 'false' } = req.query;
+    const { 
+      search, 
+      location, 
+      type, 
+      category, 
+      department,
+      experienceLevel,
+      workArrangement,
+      page = 1, 
+      limit = 20 
+    } = req.query;
 
     // Build query
-    const query = { isActive: true };
+    const query = { isActive: true, status: 'open' };
+
+    // For public/candidates, hide internal-only jobs
+    if (!req.user || req.user.role === 'candidate') {
+      query.internalOnly = false;
+    }
 
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
@@ -33,36 +47,45 @@ export const getJobs = async (req, res) => {
       query.category = category;
     }
 
+    if (department) {
+      query.department = department;
+    }
+
+    if (experienceLevel) {
+      query.experienceLevel = experienceLevel;
+    }
+
+    if (workArrangement) {
+      query['locationDetails.workArrangement'] = workArrangement;
+    }
+
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Get internal jobs
-    const internalJobs = await Job.find(query)
-      .sort({ createdAt: -1 })
+    // Get jobs
+    const jobs = await Job.find(query)
+      .populate('department', 'name code color')
+      .populate('hiringManager', 'name')
+      .sort({ featured: -1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
     const total = await Job.countDocuments(query);
 
-    let allJobs = internalJobs;
-
-    // Optionally fetch external jobs
-    if (includeExternal === 'true') {
-      try {
-        const externalJobs = await fetchExternalJobs({ search, location, page });
-        allJobs = [...internalJobs, ...externalJobs];
-      } catch (error) {
-        console.error('Error fetching external jobs:', error.message);
-      }
-    }
+    // Add company info to each job
+    const jobsWithCompany = jobs.map(job => ({
+      ...job.toObject(),
+      company: companyConfig.name,
+      companyLogo: companyConfig.logo
+    }));
 
     res.status(200).json({
       success: true,
-      count: allJobs.length,
+      count: jobs.length,
       total,
       page: parseInt(page),
       pages: Math.ceil(total / parseInt(limit)),
-      data: allJobs
+      data: jobsWithCompany
     });
   } catch (error) {
     res.status(500).json({
@@ -82,7 +105,8 @@ export const getJob = async (req, res) => {
       isActive: true
     })
       .populate('postedBy', 'name email')
-      .populate('companyRef', 'name logo website location description');
+      .populate('department', 'name code description color')
+      .populate('hiringManager', 'name email');
 
     if (!job) {
       return res.status(404).json({
@@ -91,11 +115,19 @@ export const getJob = async (req, res) => {
       });
     }
 
+    // Check internal-only access
+    if (job.internalOnly && (!req.user || req.user.role === 'candidate')) {
+      return res.status(403).json({
+        success: false,
+        message: 'This is an internal position'
+      });
+    }
+
     // Track analytics (async, don't wait)
     Analytics.trackEvent({
       eventType: 'view',
       job: job._id,
-      company: job.companyRef?._id || null,
+      department: job.department?._id || null,
       user: req.user ? req.user.id : null,
       sessionId: req.sessionID || req.ip,
       device: {
@@ -110,16 +142,17 @@ export const getJob = async (req, res) => {
     job.views += 1;
     await job.save();
 
-    // Update company stats if applicable
-    if (job.companyRef) {
-      Company.findByIdAndUpdate(job.companyRef, {
-        $inc: { 'stats.views': 1 }
-      }).catch(err => console.error('Company stats error:', err));
-    }
+    // Add company info
+    const jobData = {
+      ...job.toObject(),
+      company: companyConfig.name,
+      companyLogo: companyConfig.logo,
+      companyWebsite: companyConfig.website
+    };
 
     res.status(200).json({
       success: true,
-      data: job
+      data: jobData
     });
   } catch (error) {
     res.status(500).json({
@@ -131,20 +164,35 @@ export const getJob = async (req, res) => {
 
 // @desc    Create new job
 // @route   POST /api/jobs
-// @access  Private (Employer/Admin)
+// @access  Private (Recruiter/HR/Admin)
 export const createJob = async (req, res) => {
   try {
-    // Check if user has a company profile
-    const company = await Company.findOne({ owner: req.user.id });
+    const {
+      title,
+      department,
+      description,
+      location,
+      type,
+      category,
+      experienceLevel,
+      skills,
+      requirements,
+      responsibilities,
+      benefits,
+      salaryDetails,
+      positions,
+      internalOnly,
+      referralBonus,
+      hiringManager
+    } = req.body;
 
-    // Check job post credits if company exists
-    if (company) {
-      if (company.subscription.jobPostCredits <= 0) {
-        return res.status(403).json({
-          success: false,
-          message: 'Insufficient job post credits. Please upgrade your subscription.'
-        });
-      }
+    // Validate department exists
+    const dept = await Department.findById(department);
+    if (!dept) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid department'
+      });
     }
 
     // Helper function for known city coordinates (fallback)
@@ -158,12 +206,14 @@ export const createJob = async (req, res) => {
         'makati': [121.0244, 14.5547],
         'taguig': [121.0509, 14.5176],
         'pasig': [121.0851, 14.5764],
-        'paranaque': [121.0196, 14.4793],
-        'las pinas': [120.9833, 14.4500]
+        'san francisco': [-122.4194, 37.7749],
+        'new york': [-74.0060, 40.7128],
+        'austin': [-97.7431, 30.2672],
+        'london': [-0.1276, 51.5074]
       };
       
       const normalized = location.toLowerCase().trim();
-      return cityCoords[normalized] || [121.0244, 14.5547]; // Default to Makati
+      return cityCoords[normalized] || null;
     };
 
     // Prepare locationDetails with proper GeoJSON structure
@@ -172,62 +222,81 @@ export const createJob = async (req, res) => {
 
     // Only add GeoJSON structure for non-remote jobs
     if (workArrangement !== 'remote') {
-      const coordinates = getCityCoordinates(req.body.location);
-      locationDetails = {
-        type: 'Point',
-        coordinates: coordinates, // [longitude, latitude]
-        workArrangement: workArrangement
-      };
-      console.log('✅ LocationDetails with coordinates:', locationDetails);
+      const coordinates = getCityCoordinates(location);
+      if (coordinates) {
+        locationDetails = {
+          type: 'Point',
+          coordinates: coordinates,
+          workArrangement: workArrangement
+        };
+      } else {
+        locationDetails = {
+          workArrangement: workArrangement
+        };
+      }
     } else {
-      // For remote jobs, only include workArrangement
       locationDetails = {
         workArrangement: 'remote'
       };
-      console.log('✅ LocationDetails for remote job:', locationDetails);
     }
 
-    // Prepare job data
-    const jobData = {
-      ...req.body,
-      postedBy: req.user.id,
-      source: 'internal',
-      locationDetails // Add proper locationDetails
-    };
-
-    // Add company reference if exists
-    if (company) {
-      jobData.companyRef = company._id;
-      jobData.company = company.name;
-      jobData.companyLogo = company.logo;
-    } else {
-      // If no company profile exists, use user's email or a default
-      jobData.company = req.user.email || 'Unspecified Company';
-    }
-
-    // Generate slug from title and company
-    const slug = `${jobData.title}-${jobData.company}`
+    // Generate slug from title
+    const slug = `${title}`
       .toLowerCase()
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
-    
-    jobData.slug = `${slug}-${Date.now()}`;
 
-    console.log('Creating job with data:', JSON.stringify(jobData, null, 2));
+    // Determine initial status based on approval workflow
+    const requiresApproval = companyConfig.approvalWorkflow.requireJobApproval;
+    const initialStatus = requiresApproval ? 'pending_approval' : 'open';
+
+    // Prepare job data
+    const jobData = {
+      title,
+      department,
+      hiringManager: hiringManager || req.user.id,
+      description,
+      location,
+      locationDetails,
+      type,
+      category,
+      experienceLevel,
+      skills,
+      requirements,
+      responsibilities,
+      benefits: benefits || companyConfig.benefits,
+      salaryDetails,
+      positions: positions || 1,
+      internalOnly: internalOnly || false,
+      referralBonus: referralBonus || companyConfig.careerPage.referralBonusDefault,
+      postedBy: req.user.id,
+      slug: `${slug}-${Date.now()}`,
+      status: req.body.status === 'draft' ? 'draft' : initialStatus
+    };
+
+    // Add approval info if submitted
+    if (jobData.status === 'pending_approval') {
+      jobData.approvalInfo = {
+        submittedAt: new Date(),
+        submittedBy: req.user.id
+      };
+    }
 
     const job = await Job.create(jobData);
 
-    // Deduct job post credit and update company stats only for non-draft
-    if (company && jobData.status !== 'draft') {
-      company.subscription.jobPostCredits -= 1;
-      company.stats.totalJobs += 1;
-      company.stats.activeJobs += 1;
-      await company.save();
-    }
+    // Populate for response
+    await job.populate([
+      { path: 'department', select: 'name code' },
+      { path: 'hiringManager', select: 'name' }
+    ]);
 
     res.status(201).json({
       success: true,
-      message: jobData.status === 'draft' ? 'Job saved as draft' : 'Job created successfully',
+      message: jobData.status === 'draft' 
+        ? 'Job saved as draft' 
+        : requiresApproval 
+          ? 'Job submitted for approval'
+          : 'Job created successfully',
       data: job
     });
   } catch (error) {
@@ -327,19 +396,166 @@ export const deleteJob = async (req, res) => {
   }
 };
 
-// @desc    Search jobs with external APIs
-// @route   GET /api/jobs/search/external
-// @access  Public
-export const searchExternalJobs = async (req, res) => {
+// @desc    Approve a job posting
+// @route   PUT /api/jobs/:id/approve
+// @access  Private (Hiring Manager/HR/Admin)
+export const approveJob = async (req, res) => {
   try {
-    const { search, location, page = 1 } = req.query;
+    const job = await Job.findById(req.params.id);
 
-    const jobs = await fetchExternalJobs({ search, location, page });
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (job.status !== 'pending_approval') {
+      return res.status(400).json({
+        success: false,
+        message: 'Job is not pending approval'
+      });
+    }
+
+    job.status = 'open';
+    job.approvalInfo.approvedAt = new Date();
+    job.approvalInfo.approvedBy = req.user.id;
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Job approved and published',
+      data: job
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Reject a job posting
+// @route   PUT /api/jobs/:id/reject
+// @access  Private (Hiring Manager/HR/Admin)
+export const rejectJob = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+
+    if (job.status !== 'pending_approval') {
+      return res.status(400).json({
+        success: false,
+        message: 'Job is not pending approval'
+      });
+    }
+
+    job.status = 'cancelled';
+    job.approvalInfo.rejectedAt = new Date();
+    job.approvalInfo.rejectedBy = req.user.id;
+    job.approvalInfo.rejectionReason = reason || 'No reason provided';
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Job rejected',
+      data: job
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get jobs pending approval
+// @route   GET /api/jobs/pending-approval
+// @access  Private (HR/Admin)
+export const getPendingJobs = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    
+    const query = { status: 'pending_approval' };
+
+    // Hiring managers can only see their department's jobs
+    if (req.user.role === 'hiring_manager' && req.user.department) {
+      query.department = req.user.department;
+    }
+
+    const jobs = await Job.find(query)
+      .populate('department', 'name code')
+      .populate('postedBy', 'name email')
+      .populate('approvalInfo.submittedBy', 'name')
+      .sort({ 'approvalInfo.submittedAt': 1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    const total = await Job.countDocuments(query);
 
     res.status(200).json({
       success: true,
       count: jobs.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
       data: jobs
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get jobs by department
+// @route   GET /api/jobs/by-department/:departmentId
+// @access  Public
+export const getJobsByDepartment = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    
+    const query = { 
+      department: req.params.departmentId,
+      status: 'open',
+      isActive: true
+    };
+
+    // Hide internal jobs for non-staff
+    if (!req.user || req.user.role === 'candidate') {
+      query.internalOnly = false;
+    }
+
+    const jobs = await Job.find(query)
+      .populate('department', 'name code color')
+      .sort({ createdAt: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    const total = await Job.countDocuments(query);
+
+    // Add company info
+    const jobsWithCompany = jobs.map(job => ({
+      ...job.toObject(),
+      company: companyConfig.name,
+      companyLogo: companyConfig.logo
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: jobs.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      data: jobsWithCompany
     });
   } catch (error) {
     res.status(500).json({

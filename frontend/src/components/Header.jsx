@@ -1,18 +1,24 @@
 import { useState } from 'react'
 import './Header.css'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { loggedIn, logout } = useAuth()
+  const { loggedIn, logout, user } = useAuth()
 
   const handleLogout = () => {
     logout()
     setOpen(false)
     navigate('/')
   }
+
+  // Determine dashboard and profile routes based on user role
+  const isEmployer = user?.role === 'employer';
+  const dashboardPath = isEmployer ? '/employer/dashboard' : '/dashboard';
+  const profilePath = isEmployer ? '/employer/profile' : '/profile';
+  const postJobPath = isEmployer ? '/employer/post-job' : '/jobs/post';
 
   return (
     <header className="header">
@@ -23,15 +29,21 @@ export default function Header() {
           {' '}AppliTrak
         </Link>
         <nav className={`navbar ${open ? 'active' : ''}`} onClick={() => setOpen(false)}>
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/about">About Us</NavLink>
-          <NavLink to="/jobs">Jobs</NavLink>
+          {!isEmployer && <NavLink to="/" end>Home</NavLink>}
+          {!isEmployer && <NavLink to="/about">About Us</NavLink>}
+          {!isEmployer && <NavLink to="/jobs">Jobs</NavLink>}
           <NavLink to="/contact">Contacts</NavLink>
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          {loggedIn && <NavLink to="/analyzer">AI Analyzer</NavLink>}
+          {loggedIn && <NavLink to={dashboardPath}>Dashboard</NavLink>}
+          {loggedIn && !isEmployer && <NavLink to="/analyzer">AI Analyzer</NavLink>}
+          {loggedIn && isEmployer && (
+            <>
+              <NavLink to="/employer/manage-jobs">Manage Jobs</NavLink>
+              <NavLink to="/employer/applications">Applications</NavLink>
+            </>
+          )}
           {loggedIn ? (
             <>
-              <NavLink to="/profile">Profile</NavLink>
+              <NavLink to={profilePath}>Profile</NavLink>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -52,7 +64,7 @@ export default function Header() {
             <NavLink to="/login">Account</NavLink>
           )}
         </nav>
-        <Link to="/dashboard" id="post-job-btn" className="btn" style={{marginTop: 0}}>Post Job</Link>
+        <Link to={postJobPath} id="post-job-btn" className="btn" style={{marginTop: 0}}>Post Job</Link>
       </section>
     </header>
   )

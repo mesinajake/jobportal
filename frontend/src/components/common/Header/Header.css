@@ -1,0 +1,204 @@
+/* Header.css - Navigation header styles */
+
+.header {
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Logo */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.logo i {
+    color: var(--main-color);
+    font-size: 2.8rem;
+}
+
+.logo:hover {
+    color: var(--main-color);
+}
+
+/* Menu Toggle */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: var(--black);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Navigation */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link {
+    padding: 1rem 1.5rem;
+    font-size: 1.6rem;
+    color: var(--light-color);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--main-color);
+    background: rgba(63, 111, 182, 0.1);
+}
+
+/* AI Analyzer Link - Special Styling */
+.nav-link-ai {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link-ai::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.nav-link-ai:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.nav-link-ai:hover::before {
+    left: 100%;
+}
+
+.nav-link-ai.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+}
+
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logout-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.6rem;
+    color: var(--light-color);
+    background: transparent;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+/* Post Job Button */
+.btn-post-job {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--white);
+    background: var(--black);
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-post-job:hover {
+    background: var(--main-color);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 7rem;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        flex-direction: column;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-150%);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 999;
+    }
+    
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    .nav-link {
+        width: 100%;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    
+    .nav-auth {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-post-job span {
+        display: none;
+    }
+    
+    .logo span {
+        display: none;
+    }
+}
